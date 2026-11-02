@@ -475,7 +475,7 @@ W.forEach(e=>{const main=e.zb.split("。")[0].split("；")[0];const chars=[...ma
   ZQ.push({key:"z:"+e.key,lesson:e.lesson,e,ans:target,opts:[target,...others.slice(0,3)],m})});
 
 /* ---------- hosted mode: Supabase storage when not inside Claude ---------- */
-const CHNUM=1001;
+const CHNUM=601;
 const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
 const HOSTED=!(window.claude&&window.claude.use);
 let LEARNER="";try{LEARNER=localStorage.getItem("vocab-learner")||""}catch(e){}
@@ -484,7 +484,7 @@ function supaDB(learner){
   const H={"apikey":SUPA.key,"Content-Type":"application/json"};
   const base=SUPA.url+"/rest/v1/vocab_progress";
   const q=(kind,key)=>`?learner=eq.${encodeURIComponent(learner)}&chapter=eq.${CHNUM}&kind=eq.${kind}`+(key!=null?`&key=eq.${encodeURIComponent(key)}`:"");
-  const fail=async r=>{let m="";try{m=(await r.json()).message||""}catch(e){}return {code:"error "+r.status,message:m}};
+  const fail=async r=>{let m="";try{const j=await r.json();m=[j.message,j.details,j.hint].filter(Boolean).join(" ")}catch(e){}return {code:"error "+r.status+(m?"："+m:""),message:m}};
   return {
     doc(p){const i=p.indexOf("/"),kind=p.slice(0,i),key=p.slice(i+1);return {
       async set(data){const r=await fetch(base+"?on_conflict=learner,chapter,kind,key",{method:"POST",headers:{...H,"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({learner,chapter:CHNUM,kind,key,data,updated_at:new Date().toISOString()})});if(!r.ok)throw await fail(r)},
