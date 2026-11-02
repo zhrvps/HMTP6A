@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>欢乐伙伴 6A 词语</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;700;900&display=swap">
+<style>
+/* Layout: one workbook column — lesson box header, mode switch, lesson picker, then a single practice card. */
+:root{
+  --paper:#F6F8FC; --surface:#FFFFFF; --ink:#18233A; --muted:#5B6782; --line:#D6DDEB;
+  --blue:#2350C8; --blue-soft:#E3EAFB; --hl:#FFE066; --red:#B8322A; --red-soft:#FBE9E6;
+  --good:#1E8A4C; --good-soft:#DDF3E5; --bad:#C23B3B; --bad-soft:#FBE3E1;
+  --display:"Baloo 2","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0F1626; --surface:#172238; --ink:#E8EDF7; --muted:#9AA6C0; --line:#2B3954;
+  --blue:#7FA2FF; --blue-soft:#1F2D4D; --hl:#8A6F00; --red:#FF9A8F; --red-soft:#3A1F22;
+  --good:#5BD08A; --good-soft:#163828; --bad:#FF8A80; --bad-soft:#3D1D1F; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0F1626; --surface:#172238; --ink:#E8EDF7; --muted:#9AA6C0; --line:#2B3954;
+  --blue:#7FA2FF; --blue-soft:#1F2D4D; --hl:#8A6F00; --red:#FF9A8F; --red-soft:#3A1F22;
+  --good:#5BD08A; --good-soft:#163828; --bad:#FF8A80; --bad-soft:#3D1D1F; color-scheme:dark }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:18px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+mark{background:linear-gradient(transparent 52%, var(--hl) 52%);color:inherit;padding:0 2px}
+
+/* header */
+.head{display:flex;gap:16px;align-items:center}
+.chbox{flex:none;width:76px;height:68px;border:4px solid var(--ink);display:grid;place-items:center;
+  font:900 34px/1 var(--body);letter-spacing:.02em}
+.head h1{margin:0;font:900 clamp(26px,6vw,38px)/1.15 var(--body);text-wrap:balance}
+.head p{margin:4px 0 0;color:var(--muted);font-size:14px;letter-spacing:.04em}
+.rule{border:2px solid var(--ink);padding:10px 14px;background:var(--surface);font-size:17px}
+
+/* controls */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--blue-soft);padding:5px;border-radius:12px}
+.modes button{border:0;background:transparent;padding:10px 4px;border-radius:9px;font:700 17px/1.15 var(--body);color:var(--blue)}
+.modes button small{display:block;font:600 11px/1.2 var(--display);letter-spacing:.04em;opacity:.8}
+.modes button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bar label{font-size:14px;color:var(--muted)}
+select,input[type=search]{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+select{max-width:100%}
+.grow{flex:1 1 220px}
+
+/* card */
+.card{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.meta{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.progress{height:6px;background:var(--blue-soft);border-radius:6px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);transition:width .3s}
+.sentence{font-size:22px;line-height:1.75;margin:0}
+.sentence .target{font-weight:700;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px;text-decoration-color:var(--blue)}
+.sentence .char{font-weight:900;color:var(--red);background:var(--red-soft);border-radius:6px;padding:0 4px}
+.sentence .blank{display:inline-block;min-width:1.6em;border-bottom:3px solid var(--red);text-align:center;color:var(--red);font-weight:900}
+.ask{font:700 21px/1.4 var(--body);margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opts.one{grid-template-columns:1fr}
+.opts.chars .opt span:last-child{font-size:30px;font-weight:700}
+@media (max-width:480px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font-size:18px;min-height:56px;line-height:1.45}
+.opt:hover:not(:disabled){border-color:var(--blue)}
+.opt .k{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft);color:var(--blue);font:700 14px/1 var(--display)}
+.opt .py{font:700 22px/1.2 var(--body);letter-spacing:.02em}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.right .k{background:var(--good);color:var(--surface)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .k{background:var(--bad);color:var(--surface)}
+.opt:disabled{cursor:default}
+.fb{border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.fb.ok{background:var(--good-soft)} .fb.no{background:var(--bad-soft)}
+.fb h3{margin:0;font:900 21px/1.35 var(--body)}
+.fb.ok h3{color:var(--good)} .fb.no h3{color:var(--bad)}
+.fb p{margin:0}
+.en{color:var(--muted);font-size:15px}
+.tip{font-size:16px;color:var(--ink);border-top:1px dashed var(--line);padding-top:8px}
+.tip b{color:var(--blue)}
+.lbl{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border-radius:6px;padding:0 6px;margin-right:6px;vertical-align:1px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 20px;font:700 18px/1 var(--body);background:var(--blue);color:var(--surface)}
+.btn.ghost{background:var(--blue-soft);color:var(--blue)}
+.say{border:0;background:var(--blue-soft);color:var(--blue);border-radius:50%;width:34px;height:34px;display:inline-grid;place-items:center;vertical-align:middle;flex:none}
+.say svg{width:18px;height:18px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.py-inline{font-family:var(--body);font-weight:700;color:var(--blue)}
+
+/* 多音字 box */
+.poly{border:2px solid var(--red);border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:4px;background:var(--surface)}
+.poly h4{margin:0;font:900 17px/1.4 var(--body);color:var(--red)}
+.poly p{margin:0;font-size:16px}
+
+/* flashcard */
+.flash{border:2px dashed var(--line);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;cursor:pointer;background:transparent;width:100%}
+.flash .big{font:900 clamp(44px,11vw,72px)/1.1 var(--body);margin:0;overflow-wrap:anywhere}
+.flash .eq{font-size:15px;color:var(--muted);letter-spacing:.04em}
+.flash .bigpy{font:700 clamp(24px,6vw,34px)/1.1 var(--body);color:var(--blue);margin:0}
+.flash .detail{text-align:left;align-self:stretch;display:flex;flex-direction:column;gap:6px;font-size:17px}
+.flash .detail p{margin:0}
+
+/* results + list */
+.score{font:800 56px/1 var(--display);color:var(--blue);font-variant-numeric:tabular-nums}
+.missed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.missed li{border-bottom:1px solid var(--line);padding-bottom:10px}
+.wl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.wl li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.wl .pair{font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wl .pair b{font-size:22px}
+.wl .m{grid-column:1/-1;font-size:16px;display:flex;flex-direction:column;gap:4px}
+.wl .m p{margin:0}
+.wl h3{grid-column:1/-1;margin:14px 0 0;font:900 17px/1.3 var(--body);color:var(--muted);border:0}
+.wl li.sec{display:block;border-bottom:2px solid var(--ink);padding:16px 0 6px}
+.star{border:0;background:transparent;color:var(--muted);font-size:13px;padding:4px 8px;border-radius:8px}
+.star[aria-pressed="true"]{background:var(--hl);color:var(--ink)}
+.names{font-size:15px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:480px){.tiles{grid-template-columns:1fr}}
+.tile{border:2px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.tile .lab{font-size:13px;color:var(--muted);letter-spacing:.06em}
+.tile .val{font:800 30px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tile .det{font-size:14px;color:var(--muted)}
+.tbl{overflow-x:auto}
+.tbl table{width:100%;min-width:0;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:15px}
+.tbl th{text-align:left;font-size:13px;color:var(--muted);font-weight:700;padding:6px 8px;border-bottom:2px solid var(--line)}
+.tbl td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:has(+ tr td[colspan]) td{border-bottom:0}
+.tbl td:first-child:not([colspan]){white-space:nowrap}
+.tbl td.n,.tbl th.n{text-align:right}
+.status{margin:-6px 0 0;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.status b{color:var(--ink)}
+.src{font-size:13px;color:var(--muted);margin:0}
+#m-progress[aria-pressed="true"]{background:var(--blue);color:var(--surface)}
+footer{font-size:13px;color:var(--muted);text-align:center}
+.head p.who{margin:6px 0 0;font-size:14px;color:var(--muted);letter-spacing:0}
+.who a,.who button{color:var(--blue);background:none;border:0;padding:0;font:inherit;text-decoration:underline;cursor:pointer}
+.savenote{margin:-10px 0 0;font-size:13px;color:var(--muted)}
+.savenote.saved,.savenote.ready{color:var(--good)}
+.savenote.error{color:var(--bad)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="head">
+    <div class="chbox" aria-label="欢乐伙伴 6A">6A</div>
+    <div style="flex:1;min-width:0"><h1 id="title">欢乐伙伴 6A 词语</h1><p id="sub"></p><p class="who" id="who" hidden></p></div>
+    <button class="btn ghost" id="m-progress" data-mode="progress" style="flex:none">记录</button>
+  </header>
+  <div class="rule" id="rule"></div>
+
+  <nav class="modes" aria-label="练习方式">
+    <button id="m-learn" data-mode="learn">① 闪卡<small>Cards</small></button>
+    <button id="m-quiz" data-mode="quiz">② 词义<small>Meaning</small></button>
+    <button id="m-poly" data-mode="poly">③ 多音字<small>Readings</small></button>
+    <button id="m-zb" data-mode="zb">④ 字辨<small>Right word</small></button>
+  </nav>
+
+  <div class="bar" id="bar">
+    <label for="set">练习</label>
+    <select id="set" class="grow"></select>
+    <button class="btn ghost" id="m-list" data-mode="list" style="padding:10px 16px">词语表</button>
+  </div>
+  <p class="status" id="status"></p>
+  <p class="savenote checking" id="saveNote">正在确认进度保存在哪里……</p>
+
+  <main id="stage" class="card" aria-live="polite"></main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+// Each lesson: title, passages (name, last word number in that passage), words, names (pinyin only).
+// Word format: 词|拼音|释义|English|搭配|字辨|例句
+const LESSONS = [
+{n:1,t:"加油！加油！",parts:[["生活看板《校园访谈》",8],["核心《石缝里的小花》",21]],w:[
+"克服|kè fú|用坚强的意志和力量战胜（困难、缺点等）。|Overcome|克服困难 / 克服缺点 / 克服恐惧|（克）服 / （刻）苦|只要有决心，我们一定能克服学习上的困难。",
+"锻炼|duàn liàn|通过体育运动使身体强壮；也指在实践中使能力提高。|Exercise; train|锻炼身体 / 体育锻炼 / 锻炼意志|锻（炼）/ （练）习|爸爸每天早上都到公园跑步，锻炼身体。",
+"精神|jīng shen|表现出来的活力。|Energy; vigour|有精神 / 没精神 / 显得很精神|（精）神 / 眼（睛）。读音：jīng shen（活力）≠ jīng shén（思想、意识，如“精神食粮”）|睡了一个好觉，弟弟今天看起来特别有精神。",
+"测验|cè yàn|用一定的方法检验学习成绩或能力。|Test; quiz|参加测验 / 数学测验 / 单元测验|测（验）/ 危（险）/ （检）查|明天有华文测验，我今晚要好好复习。",
+"要求|yāo qiú|提出具体愿望或条件，希望得到满足或实现。|Require; demand|严格要求 / 提出要求 / 达到要求|要（求）/ 足（球）|老师严格要求我们按时完成作业。",
+"懒惰|lǎn duò|不爱劳动和工作；不勤快。|Lazy|懒惰的习惯 / 改掉懒惰 / 懒惰成性|（懒）惰 / 信（赖）；懒（惰）/ 心（情）|他改掉了懒惰的坏习惯，成绩进步了很多。",
+"抱佛脚|bào fó jiǎo|比喻平时没有准备，事到临头才匆忙应付。|Cram at the last minute|临时抱佛脚 / 平时不烧香，临时抱佛脚|抱（佛）脚 / （沸）水|平时认真复习，考试前就不必临时抱佛脚了。",
+"爆米花|bào mǐ huā|玉米粒加热后爆开而成的膨松食品。|Popcorn|吃爆米花 / 一桶爆米花|（爆）米花 / （暴）雨 / （瀑）布|我们一边吃爆米花，一边看电影。",
+"石缝|shí fèng|石头与石头之间的裂缝。|Crack in a rock|石缝里 / 门缝 / 裂缝|石（缝）/ 每（逢）。读音：fèng（裂缝）≠ féng（缝衣服）|一棵小草从石缝里钻了出来。",
+"每逢|měi féng|每当遇到（某个时候）。|Whenever; every time|每逢周末 / 每逢佳节 / 每逢下雨|每（逢）/ 石（缝）/ 山（峰）|每逢星期天，爷爷都会带我去公园散步。",
+"鲜艳|xiān yàn|（颜色）鲜明而艳丽。|Bright-coloured|颜色鲜艳 / 鲜艳的花朵 / 鲜艳夺目|鲜（艳）/ （绝）对|花园里开满了鲜艳的花朵。",
+"耀眼|yào yǎn|光线强烈，使人眼花。|Dazzling|耀眼的阳光 / 光芒耀眼 / 闪耀|（耀）眼 / 跳（跃）|中午的阳光十分耀眼，让人睁不开眼睛。",
+"茎|jīng|植物的主干，支撑叶和花，并输送养分。|Stem|花茎 / 根茎 / 细细的茎|花（茎）/ 小（径）/ （经）过|这朵花的茎很细，却把花朵托得高高的。",
+"托|tuō|用手掌或其他东西从下面向上承受（物体）。|Hold up; support from below|托起 / 托着下巴 / 委托|（托）起 / （拖）延|他用手托着下巴，认真地想着问题。",
+"优雅|yōu yǎ|优美高雅，不粗俗。|Elegant; graceful|动作优雅 / 优雅地站立 / 环境优雅|优（雅）/ 乌（鸦）|她优雅地跳着芭蕾舞，赢得了观众的掌声。",
+"扎根|zhā gēn|植物的根深入土中；也比喻深入到某个地方。|Take root|在石缝里扎根 / 扎根土地 / 深深扎根|（扎）根 / （礼）物。读音：zhā（扎根）≠ zā（扎辫子）|这棵大树深深地扎根在泥土里。",
+"埋|mái|用土、雪等把东西盖住。|Bury|埋在土里 / 埋藏 / 埋头苦干|（埋）藏 / （理）想。读音：mái（埋藏）≠ mán（埋怨）|小狗把骨头埋在院子的土里。",
+"暴雨|bào yǔ|又大又急的雨。|Rainstorm|狂风暴雨 / 一场暴雨 / 暴雨倾盆|（暴）雨 / （爆）米花 / （瀑）布|一场暴雨过后，街道上到处都是积水。",
+"不屈不挠|bù qū bù náo|在困难和压力面前不屈服、不退缩。|Unyielding; indomitable|不屈不挠的精神 / 不屈不挠地奋斗|不屈不（挠）/ 打（扰）/ （烧）饭|他凭着不屈不挠的精神，终于学会了游泳。",
+"凭|píng|依靠；根据。|Rely on; by virtue of|凭着 / 凭什么 / 文凭|（凭）着 / （任）务|小花凭着顽强的意志，克服了种种困难。",
+"榜样|bǎng yàng|值得学习的人或事。|Role model; example|好榜样 / 学习的榜样 / 树立榜样|（榜）样 / 肩（膀）/ （傍）晚|哥哥做事认真，是我学习的好榜样。"
+],names:[]},
+{n:2,t:"祖孙情",parts:[["生活看板《大手牵小手，祖孙同欢乐》",8],["核心《倾斜的伞》",23]],w:[
+"祖孙|zǔ sūn|祖父母和孙子、孙女。|Grandparents and grandchildren|祖孙情 / 祖孙同乐 / 祖孙三代|祖（孙）/ 谦（逊）|公园里，祖孙俩一起放风筝，玩得很开心。",
+"牵|qiān|拉着使行走或移动。|Lead by the hand; pull|牵手 / 牵着小狗 / 牵挂|（牵）手 / （牢）固|奶奶牵着我的手，慢慢地走过马路。",
+"目的|mù dì|想要达到的结果。|Purpose; aim|目的地 / 活动目的 / 达到目的|目（的）/ （约）定|这次活动的目的是让大家多了解环保。",
+"美德|měi dé|美好的品德。|Virtue|传统美德 / 发扬美德 / 敬老的美德|美（德）/ （得）到|尊敬长辈是中华民族的传统美德。",
+"家庭|jiā tíng|以婚姻和血缘关系为基础的生活单位，包括父母、子女等。|Family|家庭和谐 / 家庭成员 / 幸福家庭|家（庭）/ （挺）好 / 蜻（蜓）|我们是一个和睦的家庭，常常一起吃晚饭。",
+"拨打|bō dǎ|按号码打电话。|Dial a phone number|拨打电话 / 拨打热线 / 拨打995|（拨）打 / （拔）河|遇到紧急情况，要马上拨打995求救。",
+"智能|zhì néng|具有像人一样的智慧和能力的（多指电子设备）。|Smart; intelligent|智能手机 / 智能家居 / 人工智能|（智）能 / （知）道|爷爷学会了用智能手机和我们视频聊天。",
+"基础|jī chǔ|事物发展的根本或起点。|Foundation; basics|基础班 / 打好基础 / 基础知识|基（础）/ （出）发|学好拼音，是学习华文的基础。",
+"倾斜|qīng xié|歪向一边，不正。|Tilted; slanting|倾斜的伞 / 向一边倾斜 / 微微倾斜|倾（斜）/ 材（料）|大风一吹，路边的小树都倾斜了。",
+"一蹦一跳|yì bèng yí tiào|蹦：两脚并拢向上跳。一蹦一跳形容快乐、活泼地走路。|Hop; skip along happily|一蹦一跳 / 蹦蹦跳跳 / 活蹦乱跳|（蹦）跳 / 雪（崩）|放学了，妹妹一蹦一跳地跑回家。",
+"迅速|xùn sù|非常快。|Rapid; quickly|迅速地 / 动作迅速 / 迅速发展|（迅）速 / 通（讯）|消防员接到电话后，迅速赶到了现场。",
+"挽|wǎn|用手臂钩住。|Take someone's arm|挽起手臂 / 挽着手 / 挽救|（挽）起 / （晚）上 / （免）费|妈妈挽着奶奶的手臂，一起去散步。",
+"踩|cǎi|脚底接触地面或物体。|Step on; tread|踩水 / 踩到 / 踩着积水|（踩）水 / （采）花 / 色（彩）|小心，别踩到地上的玻璃。",
+"哗哗|huā huā|形容水流、下雨等的声音。|Sound of rushing water or rain|哗哗地下着 / 水哗哗地流 / 哗哗的雨声|（哗）哗 / 中（华）|水龙头没关好，水哗哗地流个不停。",
+"织|zhī|用丝、毛等交叉制成布或衣物；也比喻交错结成。|Weave; knit|织毛衣 / 织网 / 编织 / 交织|（织）布 / 认（识）/ （职）业|奶奶给我织了一条温暖的围巾。",
+"灰蒙蒙|huī méng méng|形容暗淡、模糊（多指景色）。|Grey and hazy|灰蒙蒙的天空 / 灰蒙蒙的一片|灰（蒙）蒙 / （朦）胧|快下雨了，天空变得灰蒙蒙的。",
+"笑眯眯|xiào mī mī|微笑时眼睛眯成一条缝的样子。|Smiling with narrowed eyes|笑眯眯地说 / 笑眯眯的样子|笑（眯）眯 / （迷）路 / 猫（咪）|老师笑眯眯地看着我们，表扬我们进步了。",
+"呀|ya|语气词，用在句末，表示惊讶、疑问或轻松的语气。|Sentence-final particle|没歪呀 / 好呀 / 快来呀|（呀）/ （牙）齿 / 惊（讶）|你怎么现在才来呀？",
+"疑惑|yí huò|心里不明白，感到怀疑。|Puzzled; doubtful|感到疑惑 / 疑惑不解 / 疑惑的眼神|疑（惑）/ （感）动|看到他疑惑的样子，老师又耐心地讲解了一遍。",
+"惊讶|jīng yà|感到很奇怪。|Surprised; astonished|感到惊讶 / 惊讶地发现 / 十分惊讶|惊（讶）/ 发（芽）/ （呀）|我惊讶地发现，小猫竟然会自己开门。",
+"苍白|cāng bái|白而略微发青，没有血色。|Pale|脸色苍白 / 苍白无力|（苍）白 / （仓）库 / （抢）先|他被雨淋湿了，冻得脸色苍白。",
+"喷嚏|pēn tì|鼻子受到刺激后，猛烈地喷气并发出声音。|Sneeze|打喷嚏 / 一连打了好几个喷嚏|（喷）水 / 气（愤）|天气太冷了，弟弟一连打了好几个喷嚏。",
+"嘴唇|zuǐ chún|口周围的部分。|Lips|嘴唇发抖 / 咬着嘴唇 / 干裂的嘴唇|嘴（唇）/ 早（晨）|天气干燥，我的嘴唇都裂开了。"
+],names:[]},
+{n:3,t:"美食小侦探",parts:[["生活看板《欢乐小厨菜单》",10],["核心《说筷子》",22]],w:[
+"侦探|zhēn tàn|暗中调查、了解情况的人。|Detective|美食小侦探 / 侦探小说 / 私家侦探|（侦）探 / （值）得|我最喜欢看侦探小说，跟着主角一起破案。",
+"清蒸|qīng zhēng|不加酱油等浓味调料，用蒸汽把食物蒸熟的做法。|Steamed, lightly seasoned|清蒸鱼 / 清蒸鸡 / 清蒸虾|清（蒸）/ （拯）救|妈妈做的清蒸鱼又鲜又嫩。",
+"辣椒|là jiāo|一种味道很辣的蔬菜，常用来调味。|Chilli|辣椒酱 / 辣椒螃蟹 / 一根辣椒|辣（椒）/ （叔）叔|这道菜放了很多辣椒，我吃得满头大汗。",
+"咸菜|xián cài|用盐腌制的蔬菜。|Salted vegetables; pickles|咸菜鸭汤 / 一碟咸菜|（咸）菜 / （减）少 / （喊）叫|外婆煮的咸菜鸭汤，酸酸咸咸的，很开胃。",
+"豆腐|dòu fu|用黄豆做成的白色、软软的块状食品。|Tofu|紫菜豆腐汤 / 一块豆腐 / 麻婆豆腐|豆（腐）/ 政（府）|豆腐又软又滑，很有营养。",
+"脆|cuì|食物容易弄碎，咬起来发出清脆的声音。|Crispy|脆皮烧鸡 / 又香又脆 / 清脆|（脆）皮 / （危）险|刚炸好的薯条又香又脆。",
+"粥|zhōu|用米加很多水煮成的半流质食物。|Porridge; congee|皮蛋瘦肉粥 / 煮粥 / 一碗粥|（粥）/ （粮）食|早上喝一碗热粥，全身都暖和了。",
+"咖喱|gā lí|用多种香料配成的调味料，味道香辣。|Curry|咖喱鱼头 / 咖喱鸡 / 咖喱饭|咖（喱）/ （厘）米|咖喱鱼头是新加坡有名的美食。",
+"赠送|zèng sòng|不收钱地把东西送给别人。|Give as a gift; complimentary|赠送礼物 / 免费赠送 / 赠送一盘水果|（赠）送 / （增）加|买满五十元，商店就赠送一个环保袋。",
+"煎|jiān|把食物放在少量热油里，使表面变黄。|Pan-fry|煎蛋 / 苦瓜煎蛋 / 煎鱼|（煎）蛋 / （剪）刀 / （箭）|爸爸每天早上都会给我煎一个荷包蛋。",
+"敏捷|mǐn jié|（动作、思想）反应快。|Agile; quick-witted|头脑敏捷 / 动作敏捷 / 思维敏捷|敏（捷）/ （睫）毛|守门员动作敏捷，接住了一个又一个球。",
+"堵塞|dǔ sè|有东西挡住，使不能通过。|Blocked; clogged|交通堵塞 / 河道堵塞 / 水管堵塞|（堵）塞 / 目（睹）|下班时间，路上常常交通堵塞。",
+"治理|zhì lǐ|处理、管理，使事情变好。|Govern; manage; harness (a river)|治理河流 / 治理国家 / 治理污染|（治）理 / 开（始）/ （抬）头|政府花了很多心血治理河流，让河水变得清澈。",
+"模仿|mó fǎng|照着别人的样子去做。|Imitate|模仿声音 / 模仿动作 / 互相模仿|模（仿）/ （访）问 / （纺）织|弟弟喜欢模仿爸爸说话的样子。",
+"例如|lì rú|举例子时用的词。|For example|例如……等 / 例如说|（例）如 / （列）车|我喜欢吃水果，例如苹果、香蕉、芒果等。",
+"有毒|yǒu dú|含有能伤害身体的东西。|Poisonous|有毒的蘑菇 / 中毒 / 毒蛇|有（毒）/ （责）任|有些蘑菇有毒，千万不能随便吃。",
+"财主|cái zhu|旧时指有很多钱和田地的人。|Rich man, in old times|大财主 / 老财主|（财）主 / （材）料 / （才）能|从前，村里有一个很吝啬的财主。",
+"争夺|zhēng duó|互相争着要得到。|Fight over; compete for|争夺财产 / 争夺冠军 / 争夺第一|争（夺）/ （奋）斗|两支球队为了争夺冠军，比赛得非常激烈。",
+"财产|cái chǎn|拥有的钱和物品。|Property; wealth|公共财产 / 家庭财产 / 分配财产|财（产）/ （严）格|我们要爱护学校的公共财产。",
+"使劲|shǐ jìn|用力。|Exert strength; push or pull hard|使劲地拉 / 使劲儿 / 使劲折|使（劲）/ （经）过 / （轻）松|他使劲地推，终于把门推开了。",
+"伟大|wěi dà|品格、才能、成就等非常了不起。|Great|伟大的发明 / 伟大的人物 / 伟大的母爱|（伟）大 / （违）反 / （围）巾|筷子真是一项伟大的发明。",
+"智慧|zhì huì|分析、判断和解决问题的能力。|Wisdom|华人的智慧 / 充满智慧 / 智慧的结晶|智（慧）/ 优（惠）|遇到困难时，我们要用智慧去解决。"
+],names:[["大禹","Dàyǔ","传说中治理黄河水灾的人"],["韩国","Hánguó","亚洲国家（Korea）"]]},
+{n:4,t:"宝贵的礼物",parts:[["生活看板《欢乐购物网》",8],["核心《珍珠项链》",19]],w:[
+"珍珠项链|zhēn zhū xiàng liàn|用珍珠串成、戴在脖子上的装饰品。|Pearl necklace|一串珍珠项链 / 戴上项链 / 金项链|（珍）珠 / （诊）所；项（链）/ （连）接|妈妈生日那天，爸爸送了她一串珍珠项链。",
+"便宜|pián yi|价钱低。|Cheap; inexpensive|价钱便宜 / 便宜货 / 又便宜又好|便（宜）/ （宣）布|这家店的文具又便宜又好用。",
+"质量|zhì liàng|产品或工作的好坏程度。|Quality|质量好 / 产品质量 / 保证质量|（质）量 / （盾）牌|这双鞋质量很好，穿了两年还没坏。",
+"送货|sòng huò|把买的东西送到顾客那里。|Deliver goods|免费送货 / 送货上门 / 送货员|送（货）/ （贷）款|网上买的东西，商店会免费送货到家。",
+"销售|xiāo shòu|卖出（商品）。|Sell; sales|已销售一千个 / 销售员 / 销售量|（销）售 / （消）失；销（售）/ （集）合|这款新手机推出后，一个月就销售了一万部。",
+"损坏|sǔn huài|使东西失去原来的作用，变坏。|Damage|损坏东西 / 如有损坏 / 严重损坏|（损）坏 / （员）工|借来的书要好好爱护，不要损坏。",
+"修理|xiū lǐ|把坏了的东西弄好。|Repair|免费修理 / 修理电脑 / 修理工|（修）理 / （条）件|自行车坏了，爸爸花了一个下午把它修理好。",
+"促销|cù xiāo|用各种方法推动商品的销售。|Sales promotion|促销期间 / 促销活动 / 节日促销|（促）销 / （捉）迷藏 / （足）球|超市正在进行促销活动，很多东西都打八折。",
+"均匀|jūn yún|各部分的大小、数量等都一样。|Even; uniform|大小均匀 / 呼吸均匀 / 分布均匀|均（匀）/ （勾）手指|这串珍珠大小均匀，颗颗饱满。",
+"一趟|yí tàng|趟：量词，表示来回走动的次数。|One trip|去一趟 / 走一趟 / 这趟车|一（趟）/ （躺）下|我要去一趟图书馆还书。",
+"猛然|měng rán|忽然，突然。|Suddenly; abruptly|猛然发现 / 猛然想起 / 猛然回头|（猛）然 / （梦）想|走到半路，我猛然想起忘了带作业。",
+"打扰|dǎ rǎo|打断别人，使别人受到影响。|Disturb; bother|打扰了 / 不要打扰 / 打扰别人|打（扰）/ 不屈不（挠）|爸爸在工作，我们不要去打扰他。",
+"干什么|gàn shén me|干：做（事情）。干什么：做什么。|Do; what are you doing|干什么 / 干活 / 能干|（干）活 / （千）万 / （于）是|你们在这里干什么呢？",
+"糊涂|hú tu|不明白事理，头脑不清楚。|Muddled; confused|一时糊涂 / 老糊涂 / 糊里糊涂|（糊）涂 / （湖）水 / （蝴）蝶|我真糊涂，竟然把钥匙锁在家里了。",
+"普通|pǔ tōng|平常的，一般的。|Ordinary; common|普通人 / 很普通 / 普普通通|（普）通 / 乐（谱）|这虽然是一本很普通的本子，却是好朋友送的。",
+"省吃俭用|shěng chī jiǎn yòng|吃的、用的都很节省。|Live frugally; scrimp and save|省吃俭用地存钱 / 一向省吃俭用|省吃（俭）用 / （检）查 / （险）|奶奶省吃俭用，把存下来的钱捐给了慈善机构。",
+"趁|chèn|利用（时间、机会）。|Take advantage of; while|趁机 / 趁热吃 / 趁着|（趁）机 / （珍）珠|汤要趁热喝才好喝。",
+"慈祥|cí xiáng|（老人的态度、神色）和善。|Kindly, of elders|慈祥的笑容 / 慈祥的奶奶 / 慈祥地说|（慈）祥 / （磁）铁；慈（祥）/ （详）细|外公慈祥地摸着我的头，夸我是个好孩子。",
+"圣贤|shèng xián|品德高尚、才智过人的人。|Sages|人非圣贤，孰能无过 / 古代圣贤|圣（贤）/ （坚）强 / （紧）张|人非圣贤，谁能无过？知错能改就好。"
+],names:[]},
+{n:5,t:"小故事，大道理",parts:[["生活看板《故事大王》",10],["《自相矛盾》",14],["《掩耳盗铃》",23],["《刻舟求剑》",28]],w:[
+"第十届|dì shí jiè|届：量词，用于定期举行的会议、活动或毕业的班级。|Session; edition|第十届 / 本届 / 应届毕业生|第十（届）/ （屈）服|我们学校今年举办了第十届运动会。",
+"讲述|jiǎng shù|把事情或道理讲出来。|Narrate; tell|讲述故事 / 讲述经过 / 讲述时间|讲（述）/ 美（术）/ （迷）路|爷爷向我们讲述了他小时候的故事。",
+"选择|xuǎn zé|从许多人或事物中挑出来。|Choose|选择题目 / 做出选择 / 选择题|选（择）/ 翻（译）|这么多本书，我不知道该选择哪一本。",
+"方式|fāng shì|说话、做事所用的方法和形式。|Way; method|呈现方式 / 奖励方式 / 生活方式|方（式）/ （试）卷 / （武）术|这次比赛，呈现故事的方式不限。",
+"创意|chuàng yì|新的、与众不同的想法。|Creativity; creative idea|最佳创意奖 / 很有创意 / 创意十足|（创）意 / （仓）库|他的手工作品很有创意，得到了老师的称赞。",
+"肥|féi|（动物）脂肪多。|Fat, of animals|肥猪 / 肥肉 / 减肥|（肥）猪 / （把）握 / （爬）山|农场里养着几头又肥又大的猪。",
+"肥皂泡|féi zào pào|用肥皂水吹出来的泡泡。|Soap bubble|吹肥皂泡 / 五彩的肥皂泡|肥（皂）/ （皇）帝|阳光下，五彩的肥皂泡在空中飘来飘去。",
+"书橱|shū chú|放书的柜子。|Bookcase|小书橱 / 一个书橱 / 打开书橱|书（橱）/ （厨）房|我的书橱里摆满了故事书。",
+"彩虹|cǎi hóng|雨后天空中出现的彩色圆弧。|Rainbow|一道彩虹 / 七色彩虹 / 彩虹桥|彩（虹）/ （红）色 / （江）河|雨停了，天边出现了一道美丽的彩虹。",
+"性别|xìng bié|男女的区别。|Gender, on a form|性别：男/女 / 不分性别|（性）别 / （姓）名|填写报名表时，要写上姓名和性别。",
+"锐利|ruì lì|（刀、矛等）尖而快；也形容眼光敏锐。|Sharp|锐利的矛 / 锐利的眼光 / 十分锐利|（锐）利 / （说）话 / （税）收|老鹰有一双锐利的眼睛。",
+"抵挡|dǐ dǎng|挡住，阻止。|Withstand; block|抵挡攻击 / 无法抵挡 / 抵挡风雨|（抵）挡 / （低）头 / （底）下|这面盾牌非常坚固，能抵挡各种攻击。",
+"哑口无言|yǎ kǒu wú yán|像哑巴一样说不出话，形容被问得无话可说。|Speechless; at a loss for words|被问得哑口无言 / 顿时哑口无言|（哑）口无言 / （亚）洲|面对同学提出的问题，他一下子哑口无言。",
+"一致|yí zhì|没有分歧；前后相同。|Consistent; unanimous|前后一致 / 意见一致 / 一致同意|一（致）/ （到）达|大家一致同意由小明当班长。",
+"掩耳盗铃|yǎn ěr dào líng|捂住自己的耳朵去偷铃，比喻自己欺骗自己。最早的说法是“掩耳盗钟”。|Deceive oneself|掩耳盗铃的做法 / 别再掩耳盗铃了|（掩）耳 / （淹）没；盗（铃）/ （零）食|考试前不复习，却假装一切都没事，简直是掩耳盗铃。",
+"贪财|tān cái|贪图钱财。|Greedy for money|十分贪财 / 贪财的人 / 贪心|（贪）财 / （贫）穷|那个贪财的商人，为了赚钱什么都愿意做。",
+"砸|zá|用重物对准东西打下去；打破。|Smash; pound|砸碎 / 砸了一下 / 把事情办砸了|（砸）碎 / （砖）头|一不小心，花盆掉下来砸碎了。",
+"镇上|zhèn shang|镇：比村大、比城小的地方。|Town|镇上 / 小镇 / 城镇|（镇）上 / （真）正 / （慎）重|每逢周末，村民们都到镇上买东西。",
+"铁锤|tiě chuí|锤：敲打东西的工具。|Hammer|铁锤 / 锤子 / 千锤百炼|铁（锤）/ （垂）直 / （睡）觉|爸爸用锤子把钉子钉进墙里。",
+"震聋|zhèn lóng|聋：耳朵听不见声音。震聋：声音大得使耳朵听不见。|Deafen|震聋耳朵 / 震耳欲聋 / 又聋又哑|（聋）/ （笼）子 / （龙）|鞭炮声太响了，差点把我的耳朵震聋。",
+"糟糕|zāo gāo|事情或情况很坏，不好。|Oh no; terrible|糟糕！/ 太糟糕了 / 糟糕的天气|（糟）糕 / （遭）遇；糟（糕）/ （羔）羊|糟糕！我把雨伞忘在巴士上了。",
+"捂住|wǔ zhù|捂：用手盖住或遮住。|Cover with the hand|捂住耳朵 / 捂着嘴笑 / 捂住眼睛|（捂）住 / （悟）出 / （语）文|听到打雷声，妹妹吓得赶紧捂住耳朵。",
+"塞住|sāi zhù|塞：把东西放进空隙里，使堵住。|Stuff; plug|塞住耳朵 / 塞满 / 塞进书包|（塞）住 / （赛）跑 / （寒）冷。读音：sāi（塞住）≠ sè（堵塞）|他把书塞进书包，急急忙忙地出门了。",
+"刻舟求剑|kè zhōu qiú jiàn|在船上刻记号，想找回掉进水里的剑，比喻不懂得根据情况的变化来改变做法。|Act rigidly, ignoring changed circumstances|刻舟求剑的做法 / 不要刻舟求剑|求（剑）/ （检）查 / （险）|情况已经变了，还用老方法，就像刻舟求剑一样。",
+"剑|jiàn|古代的一种兵器，长条形，两边有刃。|Sword|宝剑 / 一把剑 / 剑术|宝（剑）/ 弓（箭）（同音）/ （脸）|博物馆里展出了一把古代的宝剑。",
+"毫不在意|háo bú zài yì|一点儿也不放在心上。|Not care in the least|毫不在意 / 毫不犹豫 / 丝毫|（毫）不 / （豪）华|别人笑他，他却毫不在意，继续努力练习。",
+"船舷|chuán xián|船的两侧。|Side of a boat|船舷上 / 靠着船舷|船（舷）/ 琴（弦）|他靠在船舷上，欣赏着两岸的风景。",
+"捞|lāo|从水或其他液体里取东西。|Scoop up; fish out|捞鱼 / 打捞 / 捞起来|（捞）鱼 / （劳）动|小朋友们拿着网子在池塘里捞小鱼。"
+],names:[]},
+{n:6,t:"精彩三国",parts:[["生活看板《三国人物介绍》",9],["核心《草船借箭》",27]],w:[
+"丞相|chéng xiàng|古代帮助皇帝处理国家大事的最高官员。|Prime minister, in ancient times|蜀国丞相 / 曹丞相 / 当丞相|（丞）相 / （承）认 / 清（蒸）|诸葛亮是蜀国的丞相，非常有智慧。",
+"忠诚|zhōng chéng|尽心尽力，真心诚意，没有二心。|Loyal|忠诚的朋友 / 对国家忠诚 / 非常忠诚|（忠）诚 / （钟）表（同音）|小狗对主人非常忠诚。",
+"杰出|jié chū|（才能、成就）超过一般人。|Outstanding|杰出的人才 / 杰出的贡献 / 表现杰出|（杰）出 / （热）闹|他是一位杰出的科学家，发明了很多东西。",
+"大将|dà jiàng|地位高的将领。|General|一员大将 / 刘备的大将 / 将军|大（将）/ （奖）励|关羽和张飞都是刘备手下的大将。",
+"结为|jié wéi|结成某种关系。|Become, e.g. sworn brothers|结为兄弟 / 结为好朋友|（结）为 / （洁）白|刘备、关羽和张飞三人结为兄弟。",
+"称帝|chēng dì|自称皇帝，做了皇帝。|Proclaim oneself emperor|后来称帝 / 称王称帝|称（帝）/ （带）子|曹丕后来称帝，建立了魏国。",
+"英俊|yīng jùn|（男子）样子好看，有精神。|Handsome|英俊的少年 / 长得英俊 / 英俊潇洒|英（俊）/ （骏）马|哥哥穿上西装，看起来十分英俊。",
+"帅气|shuài qi|英俊潇洒。|Handsome; dashing|很帅气 / 帅气的样子 / 文武双全，英俊帅气|（帅）气 / 老（师）|他戴上帽子，显得更加帅气了。",
+"妒忌|dù jì|对比自己好的人心怀不满。|Jealous; envious|妒忌别人 / 心生妒忌 / 妒忌心|（妒）忌 / （护）士；妒（忌）/ （记）得|我们应该向别人学习，而不是妒忌别人。",
+"为难|wéi nán|故意让人感到不好办。|Make things difficult for|为难他 / 故意为难 / 感到为难|为（难）/ 沙（滩）|周瑜表面上请诸葛亮帮忙，实际上是要为难他。",
+"足智多谋|zú zhì duō móu|智慧高，善于计划。|Wise and resourceful|足智多谋的诸葛亮 / 他足智多谋|足智多（谋）/ （媒）体 / （某）人|诸葛亮足智多谋，想出了草船借箭的妙计。",
+"不谋而合|bù móu ér hé|事先没有商量，想法却完全一样。|Think alike without prior consultation|想法不谋而合 / 意见不谋而合|不（谋）而合 / （媒）体 / （某）人|我和小华的想法不谋而合，都想去动物园。",
+"弓|gōng|射箭用的器具。|Bow|弓箭 / 弯弓 / 一张弓|（弓）箭 / （引）导 / （弱）小|古代的士兵用弓箭打仗。",
+"甘愿受罚|gān yuàn shòu fá|甘愿：心里愿意；受罚：接受惩罚。|Willing to accept punishment|甘愿受罚 / 心甘情愿|受（罚）/ （罪）/ （骂）|他知道自己做错了，甘愿受罚。",
+"拖延|tuō yán|把时间推迟。|Delay; procrastinate|绝不拖延 / 拖延时间 / 不要拖延|（拖）延 / （托）起|做作业不要拖延，今天的事今天做完。",
+"吩咐|fēn fu|口头指派或命令。|Instruct; tell someone to do|吩咐军匠 / 照吩咐去做 / 老师吩咐|（吩）咐 / （纷）纷；吩（咐）/ （付）钱|妈妈吩咐我放学后马上回家。",
+"匠|jiàng|有手艺的人。军匠：军队里制造兵器的工匠。|Craftsman|军匠 / 木匠 / 工匠|木（匠）/ （区）别|木匠叔叔用木头做了一张漂亮的桌子。",
+"逼|bī|强迫，给人压力。|Force; press|逼他 / 逼迫 / 逼不得已|（逼）迫 / （福）气 / （副）|他不想去，我们不要逼他。",
+"罪|zuì|犯法的行为；过错。定罪：确定有罪。|Crime; guilt|定他的罪 / 犯罪 / 得罪|（罪）/ （罚）/ （非）常|他说话太直接，不小心得罪了朋友。",
+"稻草人|dào cǎo rén|用稻草扎成的人形。|Scarecrow; straw figure|扎稻草人 / 排满稻草人|（稻）草 / （滔）滔 / 舞（蹈）|农民在田里放了几个稻草人，用来吓走小鸟。",
+"催|cuī|叫人赶快做。|Urge; hurry|催促 / 催他 / 来催箭|（催）促 / （摧）毁|妈妈一再催我快点起床。",
+"雾|wù|空气中的小水点，看起来像烟。|Fog; mist|大雾 / 起雾 / 雾气|（雾）/ 任（务）|早上起了大雾，路上的车都开得很慢。",
+"绳子|shéng zi|用麻、棉等拧成的条状物。|Rope|一根绳子 / 跳绳 / 用绳子绑|（绳）子 / 苍（蝇）|我们用绳子把箱子绑紧。",
+"埋伏|mái fú|在暗处等着，准备突然攻击敌人。|Ambush|有埋伏 / 设下埋伏 / 埋伏在路边|埋（伏）/ （代）替|曹操怕江上有埋伏，不敢派兵出去。",
+"弓箭手|gōng jiàn shǒu|用弓射箭的士兵。|Archer|吩咐弓箭手 / 一队弓箭手|弓（箭）/ 宝（剑）/ （煎）蛋|城墙上的弓箭手一起向敌人放箭。",
+"射|shè|用力放出（箭、子弹等）。|Shoot|射箭 / 射过来 / 射门|（射）箭 / 谢（谢）|他一脚射门，球进了！",
+"上当|shàng dàng|受骗。|Be fooled; be taken in|上当受骗 / 上了当 / 又上当了|上（当）/ （挡）住|他相信了骗子的话，结果上当了。"
+],names:[["魏国","Wèiguó","三国之一，曹操一方"],["蜀国","Shǔguó","三国之一，刘备一方"],["吴国","Wúguó","三国之一，孙权一方"],["长江","Cháng Jiāng","中国最长的河"],["刘备","Liú Bèi","蜀国的君主"],["诸葛亮","Zhūgě Liàng","蜀国丞相"],["曹操","Cáo Cāo","魏国的建立者"],["曹丕","Cáo Pī","曹操的儿子，后来称帝"],["曹植","Cáo Zhí","曹操的儿子"],["曹冲","Cáo Chōng","曹操的儿子"],["司马懿","Sīmǎ Yì","帮助曹操父子治理国家"],["孙权","Sūn Quán","吴国的君主"],["周瑜","Zhōu Yú","孙权的大将"],["鲁肃","Lǔ Sù","吴国的重要人物"],["曹军","Cáojūn","曹操的军队"]]},
+{n:7,t:"世界走透透",parts:[["生活看板《万水千山旅游网》",9],["核心《躺在波浪上看书》",23]],w:[
+"最高峰|zuì gāo fēng|峰：高而尖的山顶。最高峰：最高的山峰。|Highest peak|最高峰 / 山峰 / 高峰期|山（峰）/ 每（逢）/ 石（缝）/ 蜜（蜂）|富士山是日本的最高峰。",
+"避暑|bì shǔ|天气炎热时到凉快的地方去住。|Escape the summer heat|避暑胜地 / 去山上避暑|（避）暑 / 墙（壁）；避（暑）/ 签（署）|多巴湖气候凉爽，是有名的避暑胜地。",
+"瀑布|pù bù|从山壁上或河床的陡坡上流下来的水。|Waterfall|一道瀑布 / 尼亚加拉瀑布 / 瀑布飞流直下|（瀑）布 / （暴）雨 / （爆）米花|瀑布从高处倾泻而下，发出巨大的声音。",
+"跨越|kuà yuè|越过（地区或时间的界限）。|Span; stretch across|跨越两国 / 跨越障碍 / 跨越时空|（跨）越 / （夸）奖|这座大桥跨越了整条河。",
+"倾泻|qīng xiè|大量的水从高处急速流下。|Pour down; cascade|倾泻而下 / 大雨倾泻|倾（泻）/ （写）字 / 倾（斜）。读音：xiè（倾泻）≠ xié（倾斜）|河水从山上倾泻而下，十分壮观。",
+"震耳欲聋|zhèn ěr yù lóng|声音大得耳朵快要震聋了。|Deafening|震耳欲聋的声音 / 雷声震耳欲聋|（震）耳欲聋 / （振）作；震耳欲（聋）/ （笼）子|球进的那一刻，观众的欢呼声震耳欲聋。",
+"大川|dà chuān|川：河流。|Big river|名山大川 / 山川 / 川流不息|（川）/ （州）/ （训）练|中国有许多名山大川，吸引了世界各地的游客。",
+"山脉|shān mài|连绵成一列的群山。|Mountain range|雄伟的山脉 / 一条山脉|山（脉）/ 游（泳）|两岸雄伟的山脉，让游客看得目不转睛。",
+"流连忘返|liú lián wàng fǎn|玩得高兴，舍不得离开。|Enjoy oneself so much as to forget to leave|让人流连忘返 / 美景令人流连忘返|流连忘（返）/ 吃（饭）/ 出（版）|圣淘沙的美丽海滩，让游客流连忘返。",
+"平坦|píng tǎn|没有高低起伏。|Flat; level|平坦的沙滩 / 道路平坦|平（坦）/ （但）是 / （担）心|这条路很平坦，适合骑脚踏车。",
+"覆盖|fù gài|遮盖住。|Cover|覆盖着细沙 / 白雪覆盖 / 覆盖面|（覆）盖 / （复）习 / （腹）部|冬天，大地被厚厚的白雪覆盖着。",
+"变幻|biàn huàn|没有规律地改变。|Change irregularly|变幻着色彩 / 变幻莫测 / 风云变幻|变（幻）/ （幼）小|傍晚，天边的云彩变幻着各种颜色。",
+"含盐量|hán yán liàng|水中所含盐分的多少。|Salt content|含盐量高 / 含盐量比一般海水高|（含）盐量 / （今）天 / （贪）心|死海的含盐量很高，人躺在水面上也不会沉下去。",
+"细菌|xì jūn|非常小、要用显微镜才能看见的生物。|Bacteria|消灭细菌 / 有害细菌|细（菌）/ （困）难|饭前要洗手，才能洗掉手上的细菌。",
+"甚至|shèn zhì|提出突出的例子，表示更进一层。|Even|甚至……也 / 甚至连……都|（甚）至 / （其）他|他太累了，甚至连饭都没吃就睡着了。",
+"兴致|xìng zhì|喜欢做某事的兴趣和心情。|Interest; enthusiasm|兴致勃勃 / 兴致很高 / 没有兴致|兴（致）/ （到）达|听说要去动物园，同学们的兴致一下子高了起来。",
+"益处|yì chu|好处。|Benefit|有益处 / 对健康有益处|（益）处 / 覆（盖）|多吃蔬菜水果，对身体有很多益处。",
+"治疗|zhì liáo|用药物、手术等消除疾病。|Treat; cure|治疗疾病 / 接受治疗 / 治疗方法|治（疗）/ （了）解|兽医正在为受伤的小鸟治疗。",
+"疾病|jí bìng|病。|Disease; illness|慢性疾病 / 预防疾病|（疾）病 / （嫉）妒|勤洗手可以预防很多疾病。",
+"强劲|qiáng jìng|强而有力。|Powerful; strong|强劲的浮力 / 强劲的风 / 强劲的对手|强（劲）/ （经）过|强劲的海风吹得我们站都站不稳。",
+"一股|yì gǔ|股：量词，用于气味、气体、力气等。|A whiff; a gust|一股香味 / 一股冷风 / 一股力量|一（股）/ （没）有 / （投）入|一打开门，一股香味扑鼻而来。",
+"苦涩|kǔ sè|又苦又涩的味道。|Bitter and astringent|苦涩的咸味 / 苦涩的茶|苦（涩）/ 堵（塞）（同音）|这杯茶喝起来有点苦涩。",
+"厉害|lì hai|程度很深，很严重；也指很了不起。|Severe; formidable|痛得厉害 / 真厉害 / 冷得厉害|（厉）害 / （历）史|眼睛进了海水，痛得厉害。"
+],names:[["多巴湖","Duōbā Hú","印度尼西亚的火山湖"],["印度尼西亚","Yìndùníxīyà","国家（Indonesia）"],["尼亚加拉瀑布","Níyàjiālā Pùbù","跨越加拿大和美国的瀑布"],["长江三峡","Cháng Jiāng Sānxiá","中国长江上的名胜"],["约旦","Yuēdàn","中东国家（Jordan），死海所在地"]]}
+];
+
+// 多音字: 课|词|字|另一个读音（多个用 /）|释义|English|搭配|字辨|例句（{ }标出该字；多个读音的句子用 ／ 分开，顺序同读音）
+const POLY = [
+"1|要求|要|yào|需要；重要；将要。|Want; need; will|需要 / 重要 / 要是 / 快要|yāo（要求）≠ yào（需要、重要）|天快{要}下雨了，出门记得带伞。",
+"1|抱佛脚|佛|fú|用于“仿佛”，好像的意思。|As if; seemingly|仿佛 / 仿佛看见 / 仿佛回到了过去|fó（佛教、抱佛脚）≠ fú（仿佛）|海水把我托了起来，仿{佛}托着一片树叶。",
+"1|石缝|缝|féng|用针线把东西连起来。|Sew|缝衣服 / 缝扣子 / 缝补|fèng（石缝、门缝）≠ féng（缝衣服）|奶奶戴上老花镜，帮我{缝}好了掉下的扣子。",
+"1|鲜艳|鲜|xiǎn|少。|Rare; few|鲜为人知 / 鲜有|xiān（新鲜、鲜艳）≠ xiǎn（鲜为人知）|这个小岛风景优美，却{鲜}为人知。",
+"1|扎根|扎|zā/zhá|zā：捆、束。zhá：用于“挣扎”。|Tie up / Struggle|扎辫子 / 扎头发；挣扎|zhā（扎根、扎针）≠ zā（扎辫子）≠ zhá（挣扎）|妹妹{扎}着两条小辫子，可爱极了。／小鱼在网里拼命地挣{扎}。",
+"1|埋|埋|mán|用于“埋怨”，因为事情不如意而责怪别人。|Complain; blame|埋怨 / 互相埋怨|mái（埋藏、埋伏）≠ mán（埋怨）|比赛输了，大家没有互相{埋}怨，而是一起找原因。",
+"1|暴雨|暴|pù|同“曝”，晒。只用于“一暴十寒”，比喻做事没有恒心。|Work by fits and starts|一暴十寒|bào（暴雨、暴风）≠ pù（一暴十寒）|学习要天天坚持，不能一{暴}十寒。",
+"2|目的|的|dí/de|dí：真实，确实。de：助词，用在名词或形容词后面。|Indeed / Possessive particle|的确 / 的确如此；我的 / 美丽的|dì（目的）≠ dí（的确）≠ de（我的）|他说的{的}确是真话。／这是我{的}新书包。",
+"2|拨打|打|dá|量词，十二个为一打。|Dozen|一打铅笔 / 一打鸡蛋|dǎ（打电话、拨打）≠ dá（一打）|妈妈在超市买了一{打}鸡蛋。",
+"2|哗哗|哗|huá|人多声音杂乱，吵闹。|Noisy; uproar|喧哗 / 哗然 / 请勿喧哗|huā（哗哗）≠ huá（喧哗）|图书馆里请勿大声喧{哗}。",
+"2|灰蒙蒙|蒙|mēng/Měng|mēng：欺骗；头脑发晕。Měng：用于“蒙古”。|Deceive; dazed / Mongolia|蒙骗 / 被打蒙了；蒙古|méng（灰蒙蒙、启蒙）≠ mēng（蒙骗）≠ Měng（蒙古）|骗子想{蒙}骗老人，幸好被警察识破了。／{蒙}古草原上有很多牛羊。",
+"2|笑眯眯|眯|mí|（灰尘等）进入眼中，使眼睛一时睁不开。|Get something in one's eye|沙子眯了眼|mī（笑眯眯）≠ mí（眯了眼）|一阵风吹来，沙子{眯}了我的眼睛。",
+"2|呀|呀|yā|叹词，表示惊讶。|Ah! (exclamation)|呀，下雨了！/ 呀，好漂亮！|ya（快来呀）≠ yā（呀！）|{呀}，你的新书包真漂亮！",
+"2|喷嚏|喷|pèn|（气味）浓烈。|Strong-smelling, fragrant|喷香 / 喷鼻香|pēn（喷水、喷嚏）≠ pèn（喷香）|厨房里飘出一阵{喷}香的饭菜味。",
+"3|咖喱|咖|kā|用于“咖啡”。|Coffee|咖啡 / 咖啡店 / 一杯咖啡|gā（咖喱）≠ kā（咖啡）|爸爸每天早上都要喝一杯{咖}啡。",
+"3|堵塞|塞|sāi/sài|sāi：把东西放进空隙里。sài：边界上险要的地方。|Stuff; plug / Frontier pass|塞住 / 塞满；边塞 / 要塞|sè（堵塞）≠ sāi（塞住）≠ sài（边塞）|他用手{塞}住耳朵，不想听吵闹声。／古代的士兵守卫着边{塞}。",
+"3|模仿|模|mú|形状、样子。|Appearance; mould|模样 / 模子 / 一模一样|mó（模仿、模范）≠ mú（模样、一模一样）|这对双胞胎长得一{模}一样。",
+"3|使劲|劲|jìng|坚强有力。|Strong; powerful|强劲 / 刚劲 / 劲敌|jìn（使劲、干劲）≠ jìng（强劲、劲敌）|强{劲}的海风把小树吹弯了腰。",
+"3|伟大|大|dài|用于“大夫”（医生）。|Doctor (in 大夫)|大夫 / 请大夫|dà（伟大、大人）≠ dài（大夫）|古时候，人们把医生叫做“{大}夫”。",
+"4|便宜|便|biàn|方便，顺利；简单的。|Convenient; simple|方便 / 便利 / 顺便 / 便饭|pián（便宜）≠ biàn（方便、顺便）|学校旁边有巴士站，上学很方{便}。",
+"4|质量|量|liáng|用工具测定长短、大小、轻重等。|Measure|量身高 / 测量 / 量体温|liàng（质量、数量）≠ liáng（量身高、测量）|护士正在给小明{量}身高。",
+"4|一趟|趟|tāng|从浅水里走过去。|Wade|趟水 / 趟过小河|tàng（一趟）≠ tāng（趟水）|雨后路上积了水，我们只好{趟}水过去。",
+"4|打扰|打|dá|量词，十二个为一打。|Dozen|一打铅笔 / 一打鸡蛋|dǎ（打扰、打电话）≠ dá（一打）|老师给每组发了一{打}彩色铅笔。",
+"4|干什么|干|gān|没有水分或水分很少。|Dry|干净 / 干燥 / 饼干|gàn（干活、干什么）≠ gān（干净、饼干）|衣服晒{干}了，妈妈把它们收了进来。",
+"4|糊涂|糊|hū/hù|hū：用较浓的糊状物涂抹缝隙。hù：像粥一样的糊状食物。|Plaster; smear / Paste|用泥糊上；面糊 / 辣椒糊|hú（糊涂、糊里糊涂）≠ hū（糊上墙缝）≠ hù（面糊）|工人用泥把墙上的裂缝{糊}上了。／妈妈用面{糊}做了香喷喷的煎饼。",
+"4|省吃俭用|省|xǐng|检查自己的思想和行为；明白、醒悟。|Reflect on oneself; come to|反省 / 省悟 / 不省人事|shěng（节省、省吃俭用）≠ xǐng（反省）|做错了事，我们要好好反{省}。",
+"5|选择|择|zhái|挑选，多用于口语。|Pick; sort out|择菜 / 择一择|zé（选择）≠ zhái（择菜）|晚饭前，我帮奶奶在厨房里{择}菜。",
+"5|创意|创|chuāng|伤。|Wound|创伤 / 创口 / 重创|chuàng（创意、创造）≠ chuāng（创伤）|这场大水给当地居民带来了很大的{创}伤。",
+"5|肥皂泡|泡|pāo|虚而松软的东西。|Something puffy|豆泡 / 眼泡|pào（肥皂泡、泡茶）≠ pāo（豆泡）|妈妈煮汤时放了几块豆{泡}。",
+"5|性别|别|biè|用于“别扭”，不顺心；意见不合。|Awkward; at odds|别扭 / 闹别扭|bié（性别、别人）≠ biè（别扭）|两个好朋友闹{别}扭了，一整天都不说话。",
+"5|塞住|塞|sè/sài|sè：堵住，不通。sài：边界上险要的地方。|Block / Frontier pass|堵塞 / 交通堵塞；边塞 / 要塞|sāi（塞住）≠ sè（堵塞）≠ sài（边塞）|下班时间，路上常常交通堵{塞}。／古代的将军守卫着边{塞}。",
+"6|丞相|相|xiāng|互相；亲自看是否合意。|Each other; mutual|互相 / 相信 / 相同|xiàng（丞相、照相）≠ xiāng（互相、相信）|同学之间要互{相}帮助。",
+"6|大将|将|jiāng|将要；把。|Will; about to|将来 / 即将 / 将心比心|jiàng（大将、将军）≠ jiāng（将来、即将）|我{将}来想当一名科学家。",
+"6|结为|结|jiē|长出（果实）；用于“结实”，坚固。|Bear fruit; sturdy|结果子 / 开花结果 / 结实|jié（结为、团结）≠ jiē（结果子、结实）|院子里的芒果树{结}了很多果子。",
+"6|称帝|称|chèn|适合，相配。|Suit; match|称心 / 称职 / 对称|chēng（称帝、称赞）≠ chèn（称心、对称）|蝴蝶的两只翅膀是对{称}的。",
+"6|为难|为|wèi|替；给；因为。|For; because of|为了 / 为什么 / 因为|wéi（为难、成为）≠ wèi（为了、为什么）|{为}了赢得比赛，大家每天都认真练习。",
+"6|为难|难|nàn|不幸的遭遇。|Disaster; calamity|灾难 / 遇难 / 难民|nán（为难、困难）≠ nàn（灾难）|这场大水是一场可怕的灾{难}。",
+"6|埋伏|埋|mán|用于“埋怨”，因为事情不如意而责怪别人。|Complain; blame|埋怨 / 互相埋怨|mái（埋伏、埋藏）≠ mán（埋怨）|他从来不{埋}怨别人，总是先想想自己哪里做得不好。",
+"6|上当|当|dāng|担任；应该；正在（那时候）。|Serve as; should; at that time|当然 / 当时 / 当班长|dàng（上当、恰当）≠ dāng（当然、当时）|他{当}了三年的班长，大家都很信任他。",
+"7|大川|大|dài|用于“大夫”（医生）。|Doctor (in 大夫)|大夫 / 请大夫|dà（大川、伟大）≠ dài（大夫）|奶奶不舒服，爸爸请了一位老{大}夫来看看。",
+"7|山脉|脉|mò|用于“脉脉”，形容用眼神默默地表达感情。|Silently, tenderly|脉脉 / 含情脉脉|mài（山脉、脉搏）≠ mò（脉脉）|妈妈{脉}脉地看着熟睡的小宝宝。",
+"7|含盐量|量|liáng|用工具测定长短、大小、轻重等。|Measure|量身高 / 测量 / 量体温|liàng（含盐量、质量）≠ liáng（测量）|科学家测{量}了死海水的含盐量。",
+"7|细菌|菌|jùn|可以吃的大型真菌，如香菇。|Mushroom|香菌 / 菌子|jūn（细菌）≠ jùn（香菌）|山上长着许多野生的{菌}子，但不能随便采来吃。",
+"7|兴致|兴|xīng|旺盛；开始、兴起。|Prosper; rise|兴奋 / 兴旺 / 新兴|xìng（兴致、高兴）≠ xīng（兴奋、兴旺）|听说明天去旅行，弟弟{兴}奋得睡不着觉。",
+"7|益处|处|chǔ|跟别人一起生活、交往；安排、办理。|Get along; handle|相处 / 处理 / 处罚|chù（益处、到处）≠ chǔ（相处、处理）|他性格开朗，跟同学们相{处}得很好。",
+"7|强劲|强|qiǎng/jiàng|qiǎng：勉强，硬要。jiàng：固执，不听劝。|Force; reluctantly / Stubborn|勉强 / 强迫；倔强|qiáng（强劲、坚强）≠ qiǎng（勉强）≠ jiàng（倔强）|他不想去，你就别勉{强}他了。／弟弟性格很倔{强}，做错了也不肯认错。",
+"7|强劲|劲|jìn|力气；情绪、兴趣。|Strength; energy|使劲 / 干劲 / 没劲|jìng（强劲）≠ jìn（使劲、干劲）|大家干{劲}十足，很快就把课室打扫干净了。"
+];
+</script>
+<script>
+(function(){
+const KEY="p6cn";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const CN="一二三四五六七";
+
+/* ---------- build data ---------- */
+const W=[];
+LESSONS.forEach(L=>L.w.forEach((s,i)=>{const [word,py,def,en,dp,zb,lj]=s.split("|");
+  const part=L.parts.find(p=>i<p[1]);
+  W.push({key:"m:"+L.n+word,lesson:L.n,num:i+1,part:part?part[0]:"",word,py,def,en,dp,zb,lj,poly:[]})}));
+const findW=(n,word)=>W.find(e=>e.lesson===n&&e.word===word);
+const PB=POLY.map(s=>{const [n,word,ch,py,def,en,dp,zb,lj]=s.split("|");const b={lesson:+n,word,ch,py,def,en,dp,zb,lj};const e=findW(+n,word);if(e)e.poly.push(b);b.entry=e;return b});
+const plain=s=>s.replace(/[{}]/g,"");
+
+/* marking a character or word inside a sentence */
+function markAt(sentence,word,ch){
+  let pos=-1;const wi=sentence.indexOf(word);
+  if(wi>=0&&ch){pos=wi+word.indexOf(ch)}else if(ch){pos=sentence.indexOf(ch)}
+  return pos<0?null:{a:sentence.slice(0,pos),c:sentence.charAt(pos),b:sentence.slice(pos+1)};
+}
+function wordHTML(e){const s=e.lj;let wi=s.indexOf(e.word),len=e.word.length;
+  if(wi<0){const last=e.word.charAt(e.word.length-1);wi=s.indexOf(last);len=1}
+  return wi<0?esc(s):esc(s.slice(0,wi))+`<span class="target">${esc(s.slice(wi,wi+len))}</span>`+esc(s.slice(wi+len));}
+
+/* pinyin tone helpers for answer options */
+const TONES={a:"āáǎà",e:"ēéěè",i:"īíǐì",o:"ōóǒò",u:"ūúǔù","ü":"ǖǘǚǜ"};
+function parsePy(s){let base="",tone=0;for(const ch of s){let f=false;const lo=ch.toLowerCase();for(const v in TONES){const k=TONES[v].indexOf(lo);if(k>=0){base+=ch===lo?v:v.toUpperCase();tone=k+1;f=true;break}}if(!f)base+=ch}return{base,tone}}
+function toned(base,tone){if(!tone)return base;const lo=base.toLowerCase();let pos=-1;
+  if(lo.includes("a"))pos=lo.indexOf("a");else if(lo.includes("e"))pos=lo.indexOf("e");else if(lo.includes("ou"))pos=lo.indexOf("o");
+  else for(let i=lo.length-1;i>=0;i--){if("iouü".includes(lo[i])){pos=i;break}}
+  if(pos<0)return base;let mk=TONES[lo[pos]][tone-1];if(base[pos]!==lo[pos])mk=mk.toUpperCase();return base.slice(0,pos)+mk+base.slice(pos+1)}
+/* 多音字 questions: the reading in the lesson word, plus each other reading */
+const PQ=[];
+PB.forEach((b,bi)=>{
+  const e=b.entry;if(!e)return;
+  const syl=e.py.split(/\s+/);const ix=e.word.indexOf(b.ch);
+  let orig=syl.length===[...e.word].length&&ix>=0?syl[ix]:null;if(orig&&!parsePy(orig).tone&&b.ch!=="呀")orig=null;
+  const m=markAt(e.lj,e.word,b.ch);
+  if(orig&&m&&!PQ.some(q=>q.key==="p:"+e.key+b.ch))PQ.push({key:"p:"+e.key+b.ch,lesson:b.lesson,ch:b.ch,ans:orig,m,meaning:`在“${e.word}”里，意思是：${e.def}`,en:e.en,zb:b.zb,word:e.word,isOrig:true});
+  const rs=b.py.split("/");const ss=b.lj.split("／");const defs=b.def.split(/(?=[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+[：:])/i);
+  rs.forEach((r,i)=>{const s=ss[i]||ss[0];const mm=s.match(/\{(.)\}/);if(!mm)return;const at=s.indexOf("{");
+    PQ.push({key:"p:L"+b.lesson+":"+bi+":"+r,lesson:b.lesson,ch:b.ch,ans:r,m:{a:plain(s.slice(0,at)),c:mm[1],b:plain(s.slice(at+3))},meaning:(rs.length>1?(defs.find(d=>d.startsWith(r))||b.def):b.def),en:b.en,zb:b.zb,word:e.word,isOrig:false})});
+});
+const READ={};PQ.forEach(q=>{(READ[q.ch]||(READ[q.ch]=new Set())).add(q.ans)});
+
+function pyOptions(q){const opts=[q.ans];const seen=new Set([q.ans.toLowerCase()]);
+  const add=x=>{if(opts.length<4&&!seen.has(x.toLowerCase())){seen.add(x.toLowerCase());opts.push(x)}};
+  shuffle([...READ[q.ch]]).forEach(add);
+  const {base}=parsePy(q.ans);shuffle([1,2,3,4]).forEach(t=>add(toned(base,t)));if(opts.length<4)add(base);
+  return shuffle(opts)}
+
+/* 字辨 questions: blank out the word's character, choose among look-alikes */
+const ZQ=[];
+W.forEach(e=>{const main=e.zb.split("。")[0].split("；")[0];const chars=[...main.matchAll(/（(.)）/g)].map(m=>m[1]);
+  const target=chars.find(c=>e.word.includes(c));if(!target)return;
+  const others=[...new Set(chars.filter(c=>c!==target&&!e.word.includes(c)))];if(!others.length)return;
+  const m=markAt(e.lj,e.word,target);if(!m)return;
+  ZQ.push({key:"z:"+e.key,lesson:e.lesson,e,ans:target,opts:[target,...others.slice(0,3)],m})});
+
+/* ---------- hosted mode: Supabase storage when not inside Claude ---------- */
+const CHNUM=1001;
+const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
+const HOSTED=!(window.claude&&window.claude.use);
+let LEARNER="";try{LEARNER=localStorage.getItem("vocab-learner")||""}catch(e){}
+const cleanName=s=>String(s||"").trim().replace(/[^A-Za-z0-9 _-]/g,"").slice(0,30);
+function supaDB(learner){
+  const H={"apikey":SUPA.key,"Content-Type":"application/json"};
+  const base=SUPA.url+"/rest/v1/vocab_progress";
+  const q=(kind,key)=>`?learner=eq.${encodeURIComponent(learner)}&chapter=eq.${CHNUM}&kind=eq.${kind}`+(key!=null?`&key=eq.${encodeURIComponent(key)}`:"");
+  const fail=async r=>{let m="";try{m=(await r.json()).message||""}catch(e){}return {code:"error "+r.status,message:m}};
+  return {
+    doc(p){const i=p.indexOf("/"),kind=p.slice(0,i),key=p.slice(i+1);return {
+      async set(data){const r=await fetch(base+"?on_conflict=learner,chapter,kind,key",{method:"POST",headers:{...H,"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({learner,chapter:CHNUM,kind,key,data,updated_at:new Date().toISOString()})});if(!r.ok)throw await fail(r)},
+      async get(){const r=await fetch(base+q(kind,key)+"&select=data",{headers:H});if(!r.ok)throw await fail(r);const j=await r.json();return {exists:j.length>0,data:()=>j[0]&&j[0].data}}
+    }},
+    collection(kind){return {onSnapshot(next,err){
+      const load=async()=>{try{const r=await fetch(base+q(kind)+"&select=data",{headers:H});if(!r.ok)throw await fail(r);const j=await r.json();next({docs:j.map(x=>({data:()=>x.data})),metadata:{fromCache:false}})}catch(e){err&&err(e)}};
+      load();const iv=setInterval(load,60000);return ()=>clearInterval(iv)}}}
+  };
+}
+function namePrompt(){
+  $("#bar").hidden=true;$("#status").hidden=true;
+  $("#stage").innerHTML=`<p class="ask">谁在练习？</p>
+    <p>输入一次名字就好。进度会用这个名字保存在网上，换一台设备也能接着练。</p>
+    <form id="nameForm" class="row"><input id="nameIn" type="text" autocomplete="off" maxlength="30" placeholder="名字（用英文字母）" style="flex:1 1 200px;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;font-size:18px"><button class="btn" type="submit">开始</button></form>
+    <p class="hint">请用英文字母或拼音输入，每次、每台设备都用同一个名字（和英文练习网站一样）。</p>`;
+  $("#nameForm").onsubmit=ev=>{ev.preventDefault();const n=cleanName($("#nameIn").value);if(!n)return;try{localStorage.setItem("vocab-learner",n)}catch(e){}location.reload()};
+  $("#nameIn").focus();
+}
+/* ---------- learner state ---------- */
+const LKEY=KEY+"-learner"+(HOSTED&&LEARNER?"-"+LEARNER.toLowerCase():""),ROUND=10,MIX_AT=10,MIX_TRICKY=3,GRADUATE=2;
+let L={seen:{},tricky:[],updatedAt:0};
+try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s&&s.seen)L=s}catch(e){}
+let tricky=new Set(L.tricky);let learnerDirty=false;
+const saveL=()=>{L.tricky=[...tricky];L.updatedAt=Date.now();learnerDirty=true;try{localStorage.setItem(LKEY,JSON.stringify(L))}catch(e){}scheduleSave()};
+const lastAsked=k=>(L.seen[k]&&L.seen[k].last)||0;
+function record(k,ok){const s=L.seen[k]||(L.seen[k]={n:0,ok:0,streak:0,last:0});s.n++;s.last=Date.now();let g=false;
+  if(ok){s.ok++;s.streak++;if(tricky.has(k)&&s.streak>=GRADUATE){tricky.delete(k);g=true}}else{s.streak=0;tricky.add(k)}
+  saveL();return g}
+
+let mode="learn",setSel="L1";
+try{const m=localStorage.getItem(KEY+"-mode");if(m)mode=m;const ss=localStorage.getItem(KEY+"-set");if(ss)setSel=ss}catch(e){}
+const HM=(location.hash||"").match(/^#L([1-7])$/);if(HM){setSel="L"+HM[1];mode="learn"}else if(location.hash==="#all")setSel="round";
+const lessonOf=()=>/^L\d$/.test(setSel)?+setSel.slice(1):0;
+const POOLS={quiz:()=>W.map(e=>({key:e.key,lesson:e.lesson,e})),poly:()=>PQ,zb:()=>ZQ,learn:()=>W.map(e=>({key:e.key,lesson:e.lesson,e})),list:()=>W.map(e=>({key:e.key,lesson:e.lesson,e}))};
+const MODE_NAME={quiz:"词义",poly:"多音字",zb:"字辨",learn:"闪卡",list:"词语表"};
+function modePool(){const all=POOLS[mode==="progress"?"quiz":mode]();const n=lessonOf();
+  if(setSel==="tricky")return all.filter(x=>tricky.has(x.key));
+  return n?all.filter(x=>x.lesson===n):all}
+function buildRound(){
+  const all=modePool();const trk=all.filter(x=>tricky.has(x.key)).sort((a,b)=>lastAsked(a.key)-lastAsked(b.key));
+  const fresh=shuffle(all.filter(x=>!L.seen[x.key]));const pick=[];
+  const add=list=>{for(const x of list){if(pick.length>=ROUND)break;if(!pick.includes(x))pick.push(x)}};
+  if(trk.length>MIX_AT)add(trk.slice(0,MIX_TRICKY));
+  add(fresh);add(trk);add(all.filter(x=>L.seen[x.key]&&!tricky.has(x.key)).sort((a,b)=>lastAsked(a.key)-lastAsked(b.key)));
+  const nNew=pick.filter(x=>!L.seen[x.key]).length,nTricky=pick.filter(x=>tricky.has(x.key)).length;
+  return{items:shuffle(pick),mix:{nNew,nTricky,nReview:pick.length-nNew-nTricky}}}
+
+function fillSets(){
+  const sel=$("#set");const quizish=["quiz","poly","zb"].includes(mode);
+  const pm=mode==="progress"?"quiz":mode;const all=POOLS[pm]();const tc=all.filter(x=>tricky.has(x.key)).length;
+  const opts=[[ "round",quizish?"全部课文：下一轮（10题）":`全部课文（${all.length}）`]];
+  LESSONS.forEach(l=>{const c=all.filter(x=>x.lesson===l.n).length;if(c)opts.push(["L"+l.n,`第${CN[l.n-1]}课《${l.t}》（${c}）`])});
+  opts.push(["tricky",`我的易错题（${tc}）`]);
+  sel.innerHTML=opts.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("");
+  if(!opts.some(o=>o[0]===setSel))setSel="round";sel.value=setSel;
+  const pool=modePool().filter(x=>setSel!=="tricky");const left=pool.filter(x=>!L.seen[x.key]).length;
+  $("#status").innerHTML=quizish?`${MODE_NAME[mode]}：还没练过 <b>${left}</b> 题（共 ${pool.length||modePool().length}）· 易错题 <b>${tc}</b>`+(pool.length&&left===0?" · 都练过了，现在是复习。":""):
+    `易错词 <b>${tc}</b> 个 · 闪卡点“还不熟”或答错的题会加入易错。`;
+}
+
+const speakIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const sayBtn=t=>`<button class="say" data-say="${esc(t)}" aria-label="听读音">${speakIcon}</button>`;
+function say(t){try{const s=window.speechSynthesis;if(!s)return;s.cancel();const v=new SpeechSynthesisUtterance(t);v.lang="zh-CN";v.rate=.8;
+  const zh=s.getVoices().find(x=>/zh[-_]CN/i.test(x.lang));if(zh)v.voice=zh;s.speak(v)}catch(e){}}
+
+function polyHTML(e){return e.poly.map(b=>`<div class="poly"><h4>多音字：${esc(b.ch)}（${esc(b.py)}）</h4>
+  <p>${esc(b.def)} <span class="en">(${esc(b.en)})</span></p>
+  <p><span class="lbl">搭配</span>${esc(b.dp)}</p><p><span class="lbl">字辨</span>${esc(b.zb)}</p>
+  <p><span class="lbl">例句</span>${esc(plain(b.lj))} ${sayBtn(plain(b.lj))}</p></div>`).join("")}
+function entryHTML(e,showLj=true){return `
+  <p><b style="font-size:20px">${esc(e.word)}</b> <span class="py-inline">${esc(e.py)}</span> ${sayBtn(e.word)}</p>
+  <p>${esc(e.def)} <span class="en">(${esc(e.en)})</span></p>
+  <p><span class="lbl">搭配</span>${esc(e.dp)}</p>
+  <p><span class="lbl">字辨</span>${esc(e.zb)}</p>
+  ${showLj?`<p><span class="lbl">例句</span>${esc(e.lj)} ${sayBtn(e.lj)}</p>`:""}
+  ${polyHTML(e)}`}
+const where=x=>`第${CN[x.lesson-1]}课`;
+
+/* ---------- quizzes ---------- */
+let Q=null;
+function emptyTricky(){$("#stage").innerHTML=`<p class="ask">还没有易错题</p><p>答错的题，或者闪卡上点了“还不熟”的词，会存到这里，方便以后再练。请在上面选别的练习。</p>`}
+function makeQ(x){
+  if(mode==="poly")return{x,ans:x.ans,opts:pyOptions(x)};
+  if(mode==="zb")return{x,ans:x.ans,opts:shuffle(x.opts)};
+  const e=x.e;const used=new Set([e.def]);const opts=[e.def];
+  const same=shuffle(W.filter(d=>d.lesson===e.lesson)),rest=shuffle(W);
+  for(const d of [...same,...rest]){if(opts.length===4)break;if(d===e||used.has(d.def))continue;used.add(d.def);opts.push(d.def)}
+  return{x,ans:e.def,opts:shuffle(opts)}}
+function startQuiz(){
+  let items,mix=null;
+  if(setSel==="tricky"){const t=modePool().sort((a,b)=>lastAsked(a.key)-lastAsked(b.key));if(!t.length){emptyTricky();return}items=shuffle(t.slice(0,ROUND))}
+  else{const r=buildRound();items=r.items;mix=r.mix}
+  if(!items.length){$("#stage").innerHTML=`<p>这一课没有这类题。请选别的课。</p>`;return}
+  Q={qs:items.map(makeQ),k:0,score:0,missed:[],answered:false,mix,m:mode};renderQ()}
+const mixLabel=m=>{const p=[];if(m.nNew)p.push(m.nNew+" 新");if(m.nTricky)p.push(m.nTricky+" 易错");if(m.nReview)p.push(m.nReview+" 复习");return p.join("，")};
+function renderQ(){
+  const {qs,k,score}=Q;const q=qs[k];const x=q.x;const pct=Math.round(k/qs.length*100);let body="",cls="opts";
+  if(Q.m==="quiz"){body=`<p class="sentence">${wordHTML(x.e)}</p><p class="ask">“${esc(x.e.word)}”是什么意思？ ${sayBtn(x.e.word)}</p>`;cls+=" one"}
+  else if(Q.m==="poly"){body=`<p class="sentence">${esc(x.m.a)}<span class="char">${esc(x.m.c)}</span>${esc(x.m.b)}</p><p class="ask">红色的“${esc(x.ch)}”在这里读什么？</p>`}
+  else{body=`<p class="sentence">${esc(x.m.a)}<span class="blank">？</span>${esc(x.m.b)}</p><p class="ask">选出正确的字</p>`;cls+=" chars"}
+  $("#stage").innerHTML=`
+    <div class="meta"><span>第 ${k+1} / ${qs.length} 题 · ${where(x)}</span><span>${Q.mix?mixLabel(Q.mix)+" · ":""}得分 ${score}</span></div>
+    <div class="progress"><i style="width:${pct}%"></i></div>
+    ${body}
+    <div class="${cls}">${q.opts.map((o,i)=>`<button class="opt" data-o="${esc(o)}"><span class="k">${"ABCD"[i]}</span><span${Q.m==="poly"?' class="py"':""}>${esc(o)}</span></button>`).join("")}</div>
+    <div id="fb"></div>
+    <p class="hint">键盘：按 1–4 选答案，按 Enter 下一题。</p>`;
+  Q.answered=false}
+const PRAISE=["答对了！","太棒了！","没错！","真厉害！","完全正确！"];
+function answer(o){
+  if(Q.answered)return;Q.answered=true;
+  const q=Q.qs[Q.k],x=q.x,ok=o===q.ans;
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const v=b.dataset.o;if(v===q.ans)b.classList.add("right");else if(v===o)b.classList.add("wrong")});
+  const was=tricky.has(x.key);if(ok)Q.score++;else Q.missed.push(x);
+  const g=record(x.key,ok);fillSets();track.q(ok,x.key);
+  let h3,inner;
+  if(Q.m==="quiz"){const e=x.e;
+    h3=ok?PRAISE[Math.floor(Math.random()*PRAISE.length)]:"不对哦。";
+    const other=!ok?W.find(d=>d.def===o):null;
+    inner=(other?`<p>你选的是 <b>${esc(other.word)}</b> <span class="py-inline">${esc(other.py)}</span> ${sayBtn(other.word)} 的意思（${esc(other.en)}）。</p>`:"")+entryHTML(e);}
+  else if(Q.m==="poly"){
+    h3=ok?PRAISE[Math.floor(Math.random()*PRAISE.length)]:`不对哦，这里读 ${esc(q.ans)}。`;
+    inner=`<p class="sentence" style="font-size:19px">${esc(x.m.a)}<span class="char">${esc(x.m.c)}</span>${esc(x.m.b)} ${sayBtn(x.m.a+x.m.c+x.m.b)}</p>
+      <p>“${esc(x.ch)}”读 <span class="py-inline">${esc(q.ans)}</span>：${esc(x.meaning)} <span class="en">(${esc(x.en)})</span></p>
+      <p><span class="lbl">字辨</span>${esc(x.zb)}</p>`;}
+  else{const e=x.e;
+    h3=ok?PRAISE[Math.floor(Math.random()*PRAISE.length)]:`不对哦，应该是“${esc(q.ans)}”。`;
+    inner=`<p class="sentence" style="font-size:19px">${wordHTML(e)}</p>${entryHTML(e,false)}`;}
+  $("#fb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><h3>${h3}</h3>${inner}
+    ${g?`<p class="tip"><b>很好！</b>连续答对两次，这题已经移出易错题。</p>`:ok&&was?`<p class="tip"><b>不错！</b>再答对一次，这题就会移出易错题。</p>`:!ok?`<p class="tip">这题已加入<b>易错题</b>，以后的练习还会出现。</p>`:""}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="next">${Q.k+1<Q.qs.length?"下一题":"看成绩"}</button></div>`;
+  $("#next").focus({preventScroll:true})}
+function next(){Q.k++;if(Q.k<Q.qs.length)renderQ();else results()}
+function missedLine(x){
+  if(Q.m==="poly")return `<b>${esc(x.ch)}</b> 在 “${esc(x.m.a+x.m.c+x.m.b)}” 里读 <span class="py-inline">${esc(x.ans)}</span>`;
+  const e=x.e;return `<b>${esc(e.word)}</b> <span class="py-inline">${esc(e.py)}</span><br><span style="color:var(--muted)">${esc(e.def)}${Q.m==="zb"?" · "+esc(e.zb):""}</span>`}
+function results(){
+  const {score,qs,missed}=Q;const pct=score/qs.length;track.quiz();flush();fillSets();
+  const msg=pct===1?"满分！":pct>=.8?"非常好！":pct>=.5?"不错，继续加油！":"别灰心，多练几次就记住了！";
+  $("#stage").innerHTML=`
+    <div><div class="score">${score}/${qs.length}</div><p class="ask" style="margin-top:6px">${msg}</p></div>
+    ${missed.length?`<div><p class="ask" style="font-size:18px">要再看看的</p><ul class="missed">${missed.map(x=>`<li>${missedLine(x)}</li>`).join("")}</ul>
+      <p class="hint" style="margin-top:8px">这些已加入易错题，连续答对两次才会移出。</p></div>`:""}
+    <div class="row"><button class="btn" id="again">再来一轮</button>${missed.length?`<button class="btn ghost" id="redo">只练错的</button>`:""}</div>`;
+  $("#again").onclick=startQuiz;
+  if(missed.length)$("#redo").onclick=()=>{const m=missed.slice();Q={qs:shuffle(m).map(x=>{const old=qs.find(q=>q.x===x);return{...old,opts:shuffle(old.opts)}}),k:0,score:0,missed:[],answered:false,m:Q.m};renderQ()}}
+
+/* ---------- flashcards ---------- */
+let F=null;
+function startLearn(){const p=modePool();if(!p.length){emptyTricky();return}F={items:p.map(x=>x.e),k:0,flip:false};renderF()}
+function renderF(){
+  const e=F.items[F.k];
+  $("#stage").innerHTML=`
+    <div class="meta"><span>第 ${F.k+1} / ${F.items.length} 张 · ${where(e)} ${esc(e.part)}</span><span>${tricky.has(e.key)?"在易错词里":""}</span></div>
+    <button class="flash" id="card" aria-label="翻卡">
+      <p class="big">${esc(e.word)}</p>
+      ${F.flip?`<p class="bigpy">${esc(e.py)}</p><div class="detail">
+        <p>${esc(e.def)} <span class="en">(${esc(e.en)})</span></p>
+        <p><span class="lbl">搭配</span>${esc(e.dp)}</p><p><span class="lbl">字辨</span>${esc(e.zb)}</p>
+        <p><span class="lbl">例句</span>${esc(e.lj)}</p>
+        ${e.poly.map(b=>`<div class="poly"><h4>多音字：${esc(b.ch)}（${esc(b.py)}）</h4><p>${esc(b.def)}</p><p><span class="lbl">搭配</span>${esc(b.dp)}</p><p><span class="lbl">例句</span>${esc(plain(b.lj))}</p></div>`).join("")}</div>`
+      :`<span class="eq">先想一想：怎么读？什么意思？点一下看答案。</span>`}
+    </button>
+    <div class="row" style="justify-content:space-between">
+      <div class="row">${sayBtn(e.word)}<button class="btn ghost" id="prev">上一张</button><button class="btn ghost" id="shuf">打乱</button></div>
+      <div class="row">${F.flip?`<button class="btn ghost" id="learning">还不熟</button><button class="btn" id="know">我会了</button>`:`<button class="btn" id="flip">看答案</button>`}</div>
+    </div>`;
+  $("#card").onclick=()=>{F.flip=!F.flip;renderF()};
+  $("#prev").onclick=()=>{F.k=(F.k-1+F.items.length)%F.items.length;F.flip=false;renderF()};
+  $("#shuf").onclick=()=>{F.items=shuffle(F.items);F.k=0;F.flip=false;renderF()};
+  if(F.flip){$("#know").onclick=()=>adv();$("#learning").onclick=()=>{tricky.add(e.key);saveL();adv()}}
+  else $("#flip").onclick=()=>{F.flip=true;renderF()}}
+function adv(){track.card();fillSets();F.k=(F.k+1)%F.items.length;F.flip=false;renderF()}
+
+/* ---------- word list ---------- */
+const stripTone=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g,"").toLowerCase();
+function startList(){
+  $("#stage").innerHTML=`<input type="search" id="q" placeholder="搜索：汉字、拼音（可不带声调）或英文" aria-label="搜索">
+    <p class="hint" id="count"></p><ul class="wl" id="wl"></ul>`;
+  const draw=()=>{const t=$("#q").value.trim().toLowerCase();const tp=stripTone(t);
+    const items=modePool().map(x=>x.e).filter(e=>!t||e.word.includes(t)||e.def.includes(t)||e.en.toLowerCase().includes(t)||stripTone(e.py).includes(tp)||e.poly.some(b=>stripTone(b.py).includes(tp)));
+    $("#count").textContent=`${items.length} 个词语。点“易错”可以把词存起来多练。`;
+    let html="",cur="";
+    items.forEach(e=>{const sec=`${where(e)}《${LESSONS[e.lesson-1].t}》 · ${e.part}`;
+      if(sec!==cur&&!t&&setSel!=="tricky"){cur=sec;html+=`<li class="sec"><b>${esc(sec)}</b></li>`}
+      html+=`<li><div class="pair"><b>${esc(e.word)}</b><span class="py-inline">${esc(e.py)}</span>${sayBtn(e.word)}${e.poly.length?`<span class="lbl" style="background:var(--red-soft);color:var(--red)">多音字</span>`:""}</div>
+        <button class="star" data-star="${esc(e.key)}" aria-pressed="${tricky.has(e.key)}">易错</button>
+        <div class="m"><p>${esc(e.def)} <span class="en">(${esc(e.en)})</span></p><p><span class="lbl">搭配</span>${esc(e.dp)}</p><p><span class="lbl">字辨</span>${esc(e.zb)}</p><p><span class="lbl">例句</span>${esc(e.lj)}</p>${polyHTML(e)}</div></li>`});
+    const n=lessonOf();const ls=(n?[LESSONS[n-1]]:LESSONS).filter(l=>l.names.length);
+    if(!t&&setSel!=="tricky"&&ls.length)html+=ls.map(l=>`<li class="sec"><b>${where(l)} 人名、地名（只需会读）</b></li><li><div class="m names" style="grid-column:1/-1">${l.names.map(([a,b,c])=>`<p><b style="color:var(--ink)">${esc(a)}</b> <span class="py-inline">${esc(b)}</span> · ${esc(c)}</p>`).join("")}</div></li>`).join("");
+    $("#wl").innerHTML=html};
+  $("#q").oninput=draw;draw()}
+
+/* ---------- usage tracking ---------- */
+const UKEY=KEY+"-usage"+(HOSTED&&LEARNER?"-"+LEARNER.toLowerCase():"");
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+let U={days:{}};try{U=JSON.parse(localStorage.getItem(UKEY)||'{"days":{}}')}catch(e){}
+let DEV="";try{DEV=localStorage.getItem("vocab-device")||"";if(!DEV){DEV=Math.random().toString(36).slice(2,10);localStorage.setItem("vocab-device",DEV)}}catch(e){DEV=Math.random().toString(36).slice(2,10)}
+const day=()=>{const k=today();return U.days[k]||(U.days[k]={questions:0,correct:0,cards:0,quizzes:0,seconds:0,missed:[]})};
+const saveU=()=>{try{localStorage.setItem(UKEY,JSON.stringify(U))}catch(e){}};
+const keyLabel=k=>{const w=W.find(e=>k.endsWith(e.key)||k==="z:"+e.key);if(k.startsWith("p:")){const q=PQ.find(x=>x.key===k);return q?q.ch+"("+q.ans+")":k}return w?w.word:k};
+let DB=null,dirty=false,writing=false,REMOTE=null,remoteState="loading";
+const track={
+  q(ok,k){const d=day();d.questions++;if(ok)d.correct++;else{const lab=keyLabel(k);if(!d.missed.includes(lab)){d.missed.push(lab);if(d.missed.length>60)d.missed.shift()}}saveU();dirty=true;scheduleSave()},
+  card(){day().cards++;saveU();dirty=true;scheduleSave()},
+  quiz(){day().quizzes++;saveU();dirty=true;flush()}};
+let lastAct=Date.now();["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,()=>{lastAct=Date.now()},{passive:true,capture:true}));
+setInterval(()=>{if(document.visibilityState==="visible"&&Date.now()-lastAct<90000){day().seconds+=5;saveU();dirty=true}},5000);
+let saveState="checking",saveErr="",savedAt=null,pendingSave=false,saveTimer=null;
+function saveNote(){const el=document.getElementById("saveNote");if(!el)return;
+  const t=savedAt?savedAt.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}):"";
+  el.className="savenote "+saveState;
+  el.textContent=saveState==="checking"?"正在确认进度保存在哪里……"
+    :saveState==="local"?(HOSTED?"进度只保存在这台设备上。":"没有登录 Claude：进度只保存在这台设备上。")
+    :saveState==="saving"?(HOSTED?`正在保存 ${LEARNER} 的进度……`:"正在保存进度……")
+    :saveState==="saved"?`进度已保存（${HOSTED?LEARNER+"，":""}${t}）`
+    :saveState==="ready"?(HOSTED?`正在练习：${LEARNER}，进度会保存在网上。`:"已登录：进度会保存到你的账号。")
+    :`保存失败（${saveErr}）。进度先留在这台设备上，15 秒后会自动重试。`}
+function scheduleSave(){if(!DB)return;clearTimeout(saveTimer);saveTimer=setTimeout(flush,1000)}
+async function flush(){
+  if(!DB)return;
+  if(writing){pendingSave=true;return}
+  if(!learnerDirty&&!dirty)return;
+  writing=true;pendingSave=false;saveState="saving";saveNote();
+  const errs=[];
+  if(dirty){dirty=false;const k=today(),d=day();
+    try{await DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,missed:d.missed.slice(-60),updatedAt:new Date().toISOString()})}
+    catch(e){dirty=true;errs.push("每天的记录："+((e&&(e.code||e.message))||"unknown"))}}
+  if(learnerDirty){learnerDirty=false;
+    try{await DB.doc("learner/main").set({items:Object.entries(L.seen).map(([k,v])=>({k,n:v.n||0,o:v.ok||0,s:v.streak||0,t:v.last||0})),tricky:[...tricky],updatedAt:L.updatedAt||Date.now()})}
+    catch(e){learnerDirty=true;errs.push("词语进度："+((e&&(e.code||e.message))||"unknown"))}}
+  if(errs.length){saveState="error";saveErr=errs.join("；");setTimeout(flush,15000)}
+  else{saveState="saved";savedAt=new Date();saveErr=""}
+  writing=false;saveNote();
+  if(pendingSave)flush();
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flush()});
+addEventListener("pagehide",()=>flush());
+(async()=>{
+  try{if(!HOSTED){DB=await window.claude.use("db")}
+    else if(LEARNER){DB=supaDB(LEARNER)}
+    else{saveState="local";saveNote();remoteState="none";return}
+    if(!DB){saveState="local";saveNote();remoteState="none";if(mode==="progress")startProgress();return}
+    saveState="ready";saveNote();
+    const timer=setTimeout(()=>{if(remoteState==="loading"){remoteState="slow";if(mode==="progress")startProgress()}},10000);
+    DB.collection("usage").onSnapshot(s=>{if(!s.metadata?.fromCache)clearTimeout(timer);REMOTE=s.docs.map(x=>x.data());remoteState="ok";if(mode==="progress")startProgress()},
+      ()=>{clearTimeout(timer);remoteState="none";if(mode==="progress")startProgress()});
+    try{const s=await DB.doc("learner/main").get();const r=s.exists?s.data():null;
+      let rs=null;if(r&&Array.isArray(r.items)){rs={};r.items.forEach(it=>{if(Array.isArray(it)){const [k,n,ok,streak,last]=it;rs[k]={n,ok,streak,last}}else if(it&&it.k)rs[it.k]={n:it.n,ok:it.o,streak:it.s,last:it.t}})}else if(r&&r.seen)rs=r.seen;
+      if(rs&&(r.updatedAt||0)>(L.updatedAt||0)){L={seen:rs,tricky:r.tricky||[],updatedAt:r.updatedAt};tricky=new Set(L.tricky);try{localStorage.setItem(LKEY,JSON.stringify(L))}catch(e){}fillSets();if(!Q||(Q.k===0&&!Q.answered))go()}
+      else if(L.updatedAt)learnerDirty=true;
+    }catch(e){}
+    const dd=day();if(dd.questions||dd.cards||dd.seconds)dirty=true;flush();
+  }catch(e){saveState="error";saveErr=(e&&(e.code||e.message))||"unknown";saveNote();remoteState="none"}
+})();
+const fmtTime=s=>{s=Math.round(s);if(s<60)return s?s+" 秒":"0 分钟";const m=Math.round(s/60);return m<60?m+" 分钟":Math.floor(m/60)+" 小时 "+(m%60)+" 分钟"};
+function rows(){const by={};
+  const add=(k,d)=>{const r=by[k]||(by[k]={date:k,questions:0,correct:0,cards:0,quizzes:0,seconds:0,missed:new Set()});
+    r.questions+=d.questions||0;r.correct+=d.correct||0;r.cards+=d.cards||0;r.quizzes+=d.quizzes||0;r.seconds+=d.seconds||0;(d.missed||[]).forEach(w=>r.missed.add(w))};
+  if(REMOTE)REMOTE.forEach(d=>{if(d.device!==DEV)add(d.date,d)});
+  Object.entries(U.days).forEach(([k,d])=>add(k,d));
+  return Object.values(by).sort((a,b)=>a.date<b.date?1:-1)}
+const sum=rs=>rs.reduce((a,r)=>({questions:a.questions+r.questions,correct:a.correct+r.correct,cards:a.cards+r.cards,seconds:a.seconds+r.seconds}),{questions:0,correct:0,cards:0,seconds:0});
+function tile(lab,s){const acc=s.questions?Math.round(s.correct/s.questions*100)+"% 答对":"还没做题";
+  return `<div class="tile"><span class="lab">${lab}</span><span class="val">${fmtTime(s.seconds)}</span><span class="det">${s.questions} 题 · ${acc}</span><span class="det">${s.cards} 张闪卡</span></div>`}
+function startProgress(){
+  flush();const rs=rows();const t=today();
+  const wk=new Date();wk.setDate(wk.getDate()-6);const wkey=wk.getFullYear()+"-"+String(wk.getMonth()+1).padStart(2,"0")+"-"+String(wk.getDate()).padStart(2,"0");
+  const src=remoteState==="ok"?"所有设备上的练习都会加在一起。":remoteState==="loading"?"正在读取其他设备的练习记录……":remoteState==="slow"?"暂时读不到其他设备的记录，只显示这台设备。":"只显示这台设备的练习。";
+  const nice=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("zh-CN",{month:"short",day:"numeric",weekday:"short"})};
+  const cnt=(pre,all)=>{const seen=all.filter(x=>L.seen[x.key]).length;const tr=all.filter(x=>tricky.has(x.key)).length;return `${seen}/${all.length}（易错 ${tr}）`};
+  $("#stage").innerHTML=`
+    <p class="ask">练习记录</p>
+    <p style="margin:0">练过的题：词义 <b>${cnt("m",POOLS.quiz())}</b> · 多音字 <b>${cnt("p",PQ)}</b> · 字辨 <b>${cnt("z",ZQ)}</b></p>
+    <div class="tiles">${tile("今天",sum(rs.filter(r=>r.date===t)))}${tile("最近 7 天",sum(rs.filter(r=>r.date>=wkey)))}${tile("全部",sum(rs))}</div>
+    ${rs.length?`<div class="tbl"><table><thead><tr><th>日期</th><th class="n">时间</th><th class="n">题数</th><th class="n">答对</th><th class="n">闪卡</th></tr></thead><tbody>
+      ${rs.map(r=>`<tr><td>${nice(r.date)}</td><td class="n">${fmtTime(r.seconds)}</td><td class="n">${r.questions}</td><td class="n">${r.questions?Math.round(r.correct/r.questions*100)+"%":"–"}</td><td class="n">${r.cards}</td></tr>${r.missed.size?`<tr><td colspan="5" style="font-size:14px;color:var(--muted);padding-top:0">答错：${esc([...r.missed].slice(0,15).join("、"))}${r.missed.size>15?` 等 ${r.missed.size} 个`:""}</td></tr>`:""}`).join("")}
+      </tbody></table></div>`:`<p>还没有练习记录。页面打开并在使用时会计时；每答一题、每看一张闪卡都会记在这里。</p>`}
+    <p class="src">${src} 只在页面打开并使用时计时（90 秒没有操作就暂停）。</p>`}
+
+/* ---------- wiring ---------- */
+function go(){
+  if(HOSTED&&!LEARNER){namePrompt();return}
+  try{localStorage.setItem(KEY+"-mode",mode);localStorage.setItem(KEY+"-set",setSel)}catch(e){}
+  fillSets();
+  document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===mode));
+  $("#bar").hidden=mode==="progress";$("#status").hidden=mode==="progress";flush();
+  if(mode==="progress"){startProgress();return}
+  if(["quiz","poly","zb"].includes(mode))startQuiz();else if(mode==="learn")startLearn();else startList()}
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;go()});
+$("#set").onchange=e=>{setSel=e.target.value;go()};
+document.addEventListener("click",ev=>{
+  const s=ev.target.closest("[data-say]");if(s){ev.stopPropagation();ev.preventDefault();say(s.dataset.say);return}
+  const o=ev.target.closest(".opt");if(o&&Q){answer(o.dataset.o);return}
+  if(ev.target.closest("#next")){next();return}
+  const st=ev.target.closest("[data-star]");if(st){const k=st.dataset.star;tricky.has(k)?tricky.delete(k):tricky.add(k);saveL();st.setAttribute("aria-pressed",tricky.has(k));fillSets()}
+},true);
+document.addEventListener("keydown",ev=>{
+  if(!["quiz","poly","zb"].includes(mode)||!Q||ev.target.tagName==="INPUT"||ev.target.tagName==="SELECT")return;
+  if(!Q.answered&&/^[1-4]$/.test(ev.key)){const b=document.querySelectorAll(".opt")[+ev.key-1];if(b)answer(b.dataset.o)}
+  else if(Q.answered&&ev.key==="Enter"&&document.activeElement?.id!=="next"){ev.preventDefault();next()}});
+
+if(HOSTED){const w=$("#who");w.hidden=false;w.innerHTML=(LEARNER?`正在练习：<b>${esc(LEARNER)}</b> · <button id="chg">换名字</button> · `:"")+`<a href="index.html">回到首页</a>`;const c=$("#chg");if(c)c.onclick=()=>{try{localStorage.removeItem("vocab-learner")}catch(e){}location.reload()}}
+$("#sub").textContent=`欢乐伙伴 6A · 第一至七课 · ${W.length} 个词语 · ${PQ.length} 道多音字题 · ${ZQ.length} 道字辨题`;
+$("#rule").innerHTML=`每个词语都有：<mark>拼音、释义、英文、搭配、字辨、例句</mark>。先选一课，按 ①→④ 的顺序练：先闪卡，再做题。每轮 10 题；答错的会进入<b>易错题</b>，连续答对两次才移出。`;
+$("#foot").textContent="词语来自《欢乐伙伴》6A 第一至七课（标有拼音的词）。释义、搭配和例句为练习用，请以老师的笔记为准。";
+fillSets();go();
+})();
+</script>
+
+</body>
+</html>
