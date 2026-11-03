@@ -582,7 +582,7 @@ function startQuiz(){
   Q={qs:items.map(makeQ),k:0,score:0,missed:[],answered:false,mix,m:mode};renderQ()}
 const mixLabel=m=>{const p=[];if(m.nNew)p.push(m.nNew+" 新");if(m.nTricky)p.push(m.nTricky+" 易错");if(m.nReview)p.push(m.nReview+" 复习");return p.join("，")};
 function renderQ(){
-  const {qs,k,score}=Q;const q=qs[k];const x=q.x;const pct=Math.round(k/qs.length*100);let body="",cls="opts";
+  const {qs,k,score}=Q;const q=qs[k];const x=q.x;curL=x.lesson||curL;const pct=Math.round(k/qs.length*100);let body="",cls="opts";
   if(Q.m==="quiz"){body=`<p class="sentence">${wordHTML(x.e)}</p><p class="ask">“${esc(x.e.word)}”是什么意思？ ${sayBtn(x.e.word)}</p>`;cls+=" one"}
   else if(Q.m==="poly"){body=`<p class="sentence">${esc(x.m.a)}<span class="char">${esc(x.m.c)}</span>${esc(x.m.b)}</p><p class="ask">红色的“${esc(x.ch)}”在这里读什么？</p>`}
   else{body=`<p class="sentence">${esc(x.m.a)}<span class="blank">？</span>${esc(x.m.b)}</p><p class="ask">选出正确的字</p>`;cls+=" chars"}
@@ -600,7 +600,7 @@ function answer(o){
   const q=Q.qs[Q.k],x=q.x,ok=o===q.ans;
   document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const v=b.dataset.o;if(v===q.ans)b.classList.add("right");else if(v===o)b.classList.add("wrong")});
   const was=tricky.has(x.key);if(ok)Q.score++;else Q.missed.push(x);
-  const g=record(x.key,ok);fillSets();track.q(ok,x.key);
+  const g=record(x.key,ok);fillSets();track.q(ok,x.key,x.lesson);
   let h3,inner;
   if(Q.m==="quiz"){const e=x.e;
     h3=ok?PRAISE[Math.floor(Math.random()*PRAISE.length)]:"不对哦。";
@@ -637,7 +637,7 @@ function results(){
 let F=null;
 function startLearn(){const p=modePool();if(!p.length){emptyTricky();return}F={items:p.map(x=>x.e),k:0,flip:false};renderF()}
 function renderF(){
-  const e=F.items[F.k];
+  const e=F.items[F.k];curL=(e&&e.lesson)||curL;
   $("#stage").innerHTML=`
     <div class="meta"><span>第 ${F.k+1} / ${F.items.length} 张 · ${where(e)} ${esc(e.part)}</span><span>${tricky.has(e.key)?"在易错词里":""}</span></div>
     <button class="flash" id="card" aria-label="翻卡">
@@ -658,7 +658,7 @@ function renderF(){
   $("#shuf").onclick=()=>{F.items=shuffle(F.items);F.k=0;F.flip=false;renderF()};
   if(F.flip){$("#know").onclick=()=>adv();$("#learning").onclick=()=>{tricky.add(e.key);saveL();adv()}}
   else $("#flip").onclick=()=>{F.flip=true;renderF()}}
-function adv(){track.card();fillSets();F.k=(F.k+1)%F.items.length;F.flip=false;renderF()}
+function adv(){track.card(F.items[F.k]&&F.items[F.k].lesson);fillSets();F.k=(F.k+1)%F.items.length;F.flip=false;renderF()}
 
 /* ---------- word list ---------- */
 const stripTone=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g,"").toLowerCase();
@@ -684,16 +684,18 @@ const UKEY=KEY+"-usage"+(HOSTED&&LEARNER?"-"+LEARNER.toLowerCase():"");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 let U={days:{}};try{U=JSON.parse(localStorage.getItem(UKEY)||'{"days":{}}')}catch(e){}
 let DEV="";try{DEV=localStorage.getItem("vocab-device")||"";if(!DEV){DEV=Math.random().toString(36).slice(2,10);localStorage.setItem("vocab-device",DEV)}}catch(e){DEV=Math.random().toString(36).slice(2,10)}
+let curL=0;const curLes=()=>lessonOf()||curL;
+const LD=(d,n)=>{const o=d.ls||(d.ls={});return o[n]||(o[n]={s:0,q:0,c:0,cards:0})};
 const day=()=>{const k=today();return U.days[k]||(U.days[k]={questions:0,correct:0,cards:0,quizzes:0,seconds:0,missed:[]})};
 const saveU=()=>{try{localStorage.setItem(UKEY,JSON.stringify(U))}catch(e){}};
 const keyLabel=k=>{const w=W.find(e=>k.endsWith(e.key)||k==="z:"+e.key);if(k.startsWith("p:")){const q=PQ.find(x=>x.key===k);return q?q.ch+"("+q.ans+")":k}return w?w.word:k};
 let DB=null,dirty=false,writing=false,REMOTE=null,remoteState="loading";
 const track={
-  q(ok,k){const d=day();d.questions++;if(ok)d.correct++;else{const lab=keyLabel(k);if(!d.missed.includes(lab)){d.missed.push(lab);if(d.missed.length>60)d.missed.shift()}}saveU();dirty=true;scheduleSave()},
-  card(){day().cards++;saveU();dirty=true;scheduleSave()},
+  q(ok,k,n){const d=day();d.questions++;if(n){const l=LD(d,n);l.q++;if(ok)l.c++}if(ok)d.correct++;else{const lab=keyLabel(k);if(!d.missed.includes(lab)){d.missed.push(lab);if(d.missed.length>60)d.missed.shift()}}saveU();dirty=true;scheduleSave()},
+  card(n){const d=day();d.cards++;if(n)LD(d,n).cards++;saveU();dirty=true;scheduleSave()},
   quiz(){day().quizzes++;saveU();dirty=true;flush()}};
 let lastAct=Date.now();["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,()=>{lastAct=Date.now()},{passive:true,capture:true}));
-setInterval(()=>{if(document.visibilityState==="visible"&&Date.now()-lastAct<90000){day().seconds+=5;saveU();dirty=true}},5000);
+setInterval(()=>{if(document.visibilityState==="visible"&&Date.now()-lastAct<90000){const d=day();d.seconds+=5;const n=curLes();if(n)LD(d,n).s+=5;saveU();dirty=true}},5000);
 let saveState="checking",saveErr="",savedAt=null,pendingSave=false,saveTimer=null;
 function saveNote(){const el=document.getElementById("saveNote");if(!el)return;
   const t=savedAt?savedAt.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}):"";
@@ -712,7 +714,7 @@ async function flush(){
   writing=true;pendingSave=false;saveState="saving";saveNote();
   const errs=[];
   if(dirty){dirty=false;const k=today(),d=day();
-    try{await DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,missed:d.missed.slice(-60),updatedAt:new Date().toISOString()})}
+    try{await DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,ls:d.ls||{},missed:d.missed.slice(-60),updatedAt:new Date().toISOString()})}
     catch(e){dirty=true;errs.push("每天的记录："+((e&&(e.code||e.message))||"unknown"))}}
   if(learnerDirty){learnerDirty=false;
     try{await DB.doc("learner/main").set({items:Object.entries(L.seen).map(([k,v])=>({k,n:v.n||0,o:v.ok||0,s:v.streak||0,t:v.last||0})),tricky:[...tricky],updatedAt:L.updatedAt||Date.now()})}
