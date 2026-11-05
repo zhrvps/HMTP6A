@@ -543,8 +543,11 @@ function fillSets(){
   sel.innerHTML=opts.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("");
   if(!opts.some(o=>o[0]===setSel))setSel="round";sel.value=setSel;
   const pool=modePool().filter(x=>setSel!=="tricky");const left=pool.filter(x=>!L.seen[x.key]).length;
-  $("#status").innerHTML=quizish?`${MODE_NAME[mode]}：还没练过 <b>${left}</b> 题（共 ${pool.length||modePool().length}）· 易错题 <b>${tc}</b>`+(pool.length&&left===0?" · 都练过了，现在是复习。":""):
-    `易错词 <b>${tc}</b> 个 · 闪卡点“还不熟”或答错的题会加入易错。`;
+  /* 选了某一课时，只数这一课的易错；括号里再给全部课文的总数 */
+  const ln=lessonOf(),ltc=ln?all.filter(x=>x.lesson===ln&&tricky.has(x.key)).length:tc,
+        tl=ln?`本课易错${quizish?"题":"词"} <b>${ltc}</b>${quizish?"":" 个"}（全部课文 ${tc}）`:`易错${quizish?"题":"词"} <b>${tc}</b>${quizish?"":" 个"}`;
+  $("#status").innerHTML=quizish?`${MODE_NAME[mode]}：还没练过 <b>${left}</b> 题（共 ${pool.length||modePool().length}）· ${tl}`+(pool.length&&left===0?" · 都练过了，现在是复习。":""):
+    `${tl} · 闪卡点“还不熟”或答错的题会加入易错。`;
 }
 
 const speakIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
