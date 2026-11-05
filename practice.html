@@ -509,9 +509,10 @@ const LKEY=KEY+"-learner"+(HOSTED&&LEARNER?"-"+LEARNER.toLowerCase():""),ROUND=1
 let L={seen:{},tricky:[],updatedAt:0};
 try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s&&s.seen)L=s}catch(e){}
 let tricky=new Set(L.tricky);let learnerDirty=false;
+const loadL=()=>{try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s&&s.seen){L=s;tricky=new Set(L.tricky||[])}}catch(e){}};
 const saveL=()=>{L.tricky=[...tricky];L.updatedAt=Date.now();learnerDirty=true;try{localStorage.setItem(LKEY,JSON.stringify(L))}catch(e){}scheduleSave()};
 const lastAsked=k=>(L.seen[k]&&L.seen[k].last)||0;
-function record(k,ok){const s=L.seen[k]||(L.seen[k]={n:0,ok:0,streak:0,last:0});s.n++;s.last=Date.now();let g=false;
+function record(k,ok){loadL();const s=L.seen[k]||(L.seen[k]={n:0,ok:0,streak:0,last:0});s.n++;s.last=Date.now();let g=false;
   if(ok){s.ok++;s.streak++;if(tricky.has(k)&&s.streak>=GRADUATE){tricky.delete(k);g=true}}else{s.streak=0;tricky.add(k)}
   saveL();return g}
 
@@ -656,7 +657,7 @@ function renderF(){
   $("#card").onclick=()=>{F.flip=!F.flip;renderF()};
   $("#prev").onclick=()=>{F.k=(F.k-1+F.items.length)%F.items.length;F.flip=false;renderF()};
   $("#shuf").onclick=()=>{F.items=shuffle(F.items);F.k=0;F.flip=false;renderF()};
-  if(F.flip){$("#know").onclick=()=>adv();$("#learning").onclick=()=>{tricky.add(e.key);saveL();adv()}}
+  if(F.flip){$("#know").onclick=()=>adv();$("#learning").onclick=()=>{loadL();tricky.add(e.key);saveL();adv()}}
   else $("#flip").onclick=()=>{F.flip=true;renderF()}}
 function adv(){track.card(F.items[F.k]&&F.items[F.k].lesson);fillSets();F.k=(F.k+1)%F.items.length;F.flip=false;renderF()}
 
@@ -686,7 +687,9 @@ let U={days:{}};try{U=JSON.parse(localStorage.getItem(UKEY)||'{"days":{}}')}catc
 let DEV="";try{DEV=localStorage.getItem("vocab-device")||"";if(!DEV){DEV=Math.random().toString(36).slice(2,10);localStorage.setItem("vocab-device",DEV)}}catch(e){DEV=Math.random().toString(36).slice(2,10)}
 let curL=0;const curLes=()=>lessonOf()||curL;
 const LD=(d,n)=>{const o=d.ls||(d.ls={});return o[n]||(o[n]={s:0,q:0,c:0,cards:0})};
-const day=()=>{const k=today();return U.days[k]||(U.days[k]={questions:0,correct:0,cards:0,quizzes:0,seconds:0,missed:[]})};
+const loadU=()=>{try{const x=JSON.parse(localStorage.getItem(UKEY)||"null");if(x&&x.days)U=x}catch(e){}};
+/* 每次修改前重新读取，两个标签页同时打开也会相加，不会互相覆盖 */
+const day=(k=today())=>{loadU();return U.days[k]||(U.days[k]={questions:0,correct:0,cards:0,quizzes:0,seconds:0,missed:[]})};
 const saveU=()=>{try{localStorage.setItem(UKEY,JSON.stringify(U))}catch(e){}};
 const keyLabel=k=>{const w=W.find(e=>k.endsWith(e.key)||k==="z:"+e.key);if(k.startsWith("p:")){const q=PQ.find(x=>x.key===k);return q?q.ch+"("+q.ans+")":k}return w?w.word:k};
 let DB=null,dirty=false,writing=false,REMOTE=null,remoteState="loading";
@@ -694,8 +697,29 @@ const track={
   q(ok,k,n){const d=day();d.questions++;if(n){const l=LD(d,n);l.q++;if(ok)l.c++}if(ok)d.correct++;else{const lab=keyLabel(k);if(!d.missed.includes(lab)){d.missed.push(lab);if(d.missed.length>60)d.missed.shift()}}saveU();dirty=true;scheduleSave()},
   card(n){const d=day();d.cards++;if(n)LD(d,n).cards++;saveU();dirty=true;scheduleSave()},
   quiz(){day().quizzes++;saveU();dirty=true;flush()}};
-let lastAct=Date.now();["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,()=>{lastAct=Date.now()},{passive:true,capture:true}));
-setInterval(()=>{if(document.visibilityState==="visible"&&Date.now()-lastAct<90000){const d=day();d.seconds+=5;const n=curLes();if(n)LD(d,n).s+=5;saveU();dirty=true}},5000);
+/* 时间：页面在屏幕上、并且在限定时间内有点击/滑动/按键，才算练习时间（active）；
+   页面在屏幕上的时间另记（vis）。都用时间戳计算，浏览器定时器变慢也不会少算。每次练习记成一个 session。 */
+const IDLE=()=>90000, SESS_GAP=600000, STEP_MAX=120000;
+const TAB=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const r1=x=>Math.round(x*10)/10;
+let lastAct=Date.now(),lastT=Date.now(),onScreen=document.visibilityState==="visible",sess=null,sessN=0;
+function accrue(){
+  const now=Date.now(),from=lastT;lastT=now;
+  if(!onScreen||now<=from)return;
+  const step=now-from;if(step>STEP_MAX)return;
+  const act=Math.max(0,Math.min(now,lastAct+IDLE())-from)/1000,vis=step/1000;
+  if(!sess||from-sess.b>SESS_GAP)sess={id:TAB+"-"+(++sessN),a:from,b:now};else sess.b=now;
+  const d=day();
+  d.seconds=r1((d.seconds||0)+act);d.vis=r1((d.vis||0)+vis);
+  const n=curLes();if(n){const l=LD(d,n);l.s=r1((l.s||0)+act);l.v=r1((l.v||0)+vis)}
+  const t=d.tabs||(d.tabs={});t[mode]=r1((t[mode]||0)+act);
+  const ss=d.sess||(d.sess=[]);let e=ss.find(x=>x.id===sess.id);
+  if(!e){e={id:sess.id,a:sess.a,b:now,act:0,vis:0};ss.push(e);if(ss.length>40)ss.shift()}
+  e.b=now;e.act=r1(e.act+act);e.vis=r1(e.vis+vis);
+  saveU();dirty=true;
+}
+["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,()=>{accrue();lastAct=Date.now()},{passive:true,capture:true}));
+setInterval(accrue,5000);
 let saveState="checking",saveErr="",savedAt=null,pendingSave=false,saveTimer=null;
 function saveNote(){const el=document.getElementById("saveNote");if(!el)return;
   const t=savedAt?savedAt.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}):"";
@@ -707,16 +731,19 @@ function saveNote(){const el=document.getElementById("saveNote");if(!el)return;
     :saveState==="ready"?(HOSTED?`正在练习：${LEARNER}，进度会保存在网上。`:"已登录：进度会保存到你的账号。")
     :`保存失败（${saveErr}）。进度先留在这台设备上，15 秒后会自动重试。`}
 function scheduleSave(){if(!DB)return;clearTimeout(saveTimer);saveTimer=setTimeout(flush,1000)}
+const writeDay=(k,d)=>DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,vis:d.vis||0,sess:(d.sess||[]).map(({a,b,act,vis})=>({a,b,act,vis})),tabs:d.tabs||{},ls:d.ls||{},missed:(d.missed||[]).slice(-60),updatedAt:new Date().toISOString()});
+const unsentDays=()=>{loadU();const t=today(),lim=new Date(Date.now()-7*864e5).toISOString().slice(0,10);return Object.keys(U.days).filter(k=>k<t&&k>=lim&&!(U.synced&&U.synced[k]))};
 async function flush(){
   if(!DB)return;
   if(writing){pendingSave=true;return}
   if(!learnerDirty&&!dirty)return;
   writing=true;pendingSave=false;saveState="saving";saveNote();
   const errs=[];
-  if(dirty){dirty=false;const k=today(),d=day();
-    try{await DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,ls:d.ls||{},missed:d.missed.slice(-60),updatedAt:new Date().toISOString()})}
+  if(dirty){dirty=false;const k=today();
+    try{await writeDay(k,day(k))}
     catch(e){dirty=true;errs.push("每天的记录："+((e&&(e.code||e.message))||"unknown"))}}
-  if(learnerDirty){learnerDirty=false;
+  for(const k of unsentDays()){try{await writeDay(k,day(k));loadU();(U.synced||(U.synced={}))[k]=1;saveU()}catch(e){}}
+  if(learnerDirty){learnerDirty=false;loadL();
     try{await DB.doc("learner/main").set({items:Object.entries(L.seen).map(([k,v])=>({k,n:v.n||0,o:v.ok||0,s:v.streak||0,t:v.last||0})),tricky:[...tricky],updatedAt:L.updatedAt||Date.now()})}
     catch(e){learnerDirty=true;errs.push("词语进度："+((e&&(e.code||e.message))||"unknown"))}}
   if(errs.length){saveState="error";saveErr=errs.join("；");setTimeout(flush,15000)}
@@ -724,8 +751,8 @@ async function flush(){
   writing=false;saveNote();
   if(pendingSave)flush();
 }
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flush()});
-addEventListener("pagehide",()=>flush());
+document.addEventListener("visibilitychange",()=>{accrue();onScreen=document.visibilityState==="visible";lastT=Date.now();if(onScreen)lastAct=Date.now();else flush()});
+addEventListener("pagehide",()=>{accrue();flush()});
 (async()=>{
   try{if(!HOSTED){DB=await window.claude.use("db")}
     else if(LEARNER){DB=supaDB(LEARNER)}
@@ -740,7 +767,7 @@ addEventListener("pagehide",()=>flush());
       if(rs&&(r.updatedAt||0)>(L.updatedAt||0)){L={seen:rs,tricky:r.tricky||[],updatedAt:r.updatedAt};tricky=new Set(L.tricky);try{localStorage.setItem(LKEY,JSON.stringify(L))}catch(e){}fillSets();if(!Q||(Q.k===0&&!Q.answered))go()}
       else if(L.updatedAt)learnerDirty=true;
     }catch(e){}
-    const dd=day();if(dd.questions||dd.cards||dd.seconds)dirty=true;flush();
+    const dd=day();if(dd.questions||dd.cards||dd.seconds||dd.vis)dirty=true;if(unsentDays().length)dirty=true;flush();
   }catch(e){saveState="error";saveErr=(e&&(e.code||e.message))||"unknown";saveNote();remoteState="none"}
 })();
 const fmtTime=s=>{s=Math.round(s);if(s<60)return s?s+" 秒":"0 分钟";const m=Math.round(s/60);return m<60?m+" 分钟":Math.floor(m/60)+" 小时 "+(m%60)+" 分钟"};
@@ -783,7 +810,7 @@ document.addEventListener("click",ev=>{
   const s=ev.target.closest("[data-say]");if(s){ev.stopPropagation();ev.preventDefault();say(s.dataset.say);return}
   const o=ev.target.closest(".opt");if(o&&Q){answer(o.dataset.o);return}
   if(ev.target.closest("#next")){next();return}
-  const st=ev.target.closest("[data-star]");if(st){const k=st.dataset.star;tricky.has(k)?tricky.delete(k):tricky.add(k);saveL();st.setAttribute("aria-pressed",tricky.has(k));fillSets()}
+  const st=ev.target.closest("[data-star]");if(st){const k=st.dataset.star;loadL();tricky.has(k)?tricky.delete(k):tricky.add(k);saveL();st.setAttribute("aria-pressed",tricky.has(k));fillSets()}
 },true);
 document.addEventListener("keydown",ev=>{
   if(!["quiz","poly","zb"].includes(mode)||!Q||ev.target.tagName==="INPUT"||ev.target.tagName==="SELECT")return;
