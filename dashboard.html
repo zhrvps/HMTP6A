@@ -118,8 +118,8 @@ const sm=t=>`<br><span class="small">${t}</span>`;
 const modeTds=v=>{const md=v.md||{},L=md.learn;
   const one=(k,lab)=>{const x=md[k];return `<td data-l="${lab}">${x&&x.q?x.q+" 题"+sm(pct(x.c,x.q)):"–"}</td>`};
   return `<td data-l="闪卡">${v.cards?v.cards+" 张"+(L&&L.unk?sm("不熟 "+L.unk):""):"–"}</td>`+one("quiz","词义")+one("poly","多音字")+one("zb","字辨")+
-    `<td data-l="合计">${v.q?v.q+" 题"+sm(pct(v.c,v.q)):"–"}</td>`};
-const MODE_TH="<th>闪卡</th><th>词义</th><th>多音字</th><th>字辨</th><th>合计</th>";
+    `<td data-l="题目合计">${v.q?v.q+" 题"+sm(pct(v.c,v.q)):"–"}</td>`};
+const MODE_TH="<th>闪卡</th><th>词义</th><th>多音字</th><th>字辨</th><th>题目合计</th>";
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -253,7 +253,7 @@ function render(){
       const ld=lastDay[id]?`最近一次：${+lastDay[id].slice(5,7)}月${+lastDay[id].slice(8)}日`:"";
       return `<tr><td><div class="lname"><span class="dot" style="background:${lessonColor(id)}"></span><span>${I.label}${I.title?`<br><span class="small">${esc(I.title)}</span>`:""}${ld?`<br><span class="small">${ld}</span>`:""}</span></div></td>
       <td data-l="练习时间">${t&&t.s?fmt(t.s):"–"}${t&&t.vKnown&&!t.vGap&&t.v?`<br><span class="small">在屏幕上 ${fmt(t.v)}</span>`:""}</td>
-      <td data-l="天数">${t&&t.days?t.days:"–"}</td>${t?modeTds(t):'<td data-l="闪卡">–</td><td data-l="词义">–</td><td data-l="多音字">–</td><td data-l="字辨">–</td><td data-l="合计">–</td>'}
+      <td data-l="天数">${t&&t.days?t.days:"–"}</td>${t?modeTds(t):'<td data-l="闪卡">–</td><td data-l="词义">–</td><td data-l="多音字">–</td><td data-l="字辨">–</td><td data-l="题目合计">–</td>'}
       <td data-l="练过">${p.seen}${I.total?`/${I.total}<div class="prog"><i style="width:${Math.min(100,Math.round(p.seen/I.total*100))}%"></i></div>`:""}</td>
       <td data-l="易错">${p.tricky||"–"}</td></tr>`}).join("")}
     </tbody></table></div>
@@ -277,9 +277,9 @@ function dayHTML(D,open){
   const rows=ids.map(id=>{const v=D.ls[id],I=lessonInfo(id);
     return `<tr><td><div class="lname"><span class="dot" style="background:${lessonColor(id)}"></span><span>${I.label}${I.title?` <span class="small">${esc(I.title)}</span>`:""}</span></div></td>
       <td data-l="练习时间">${fmt(v.s)}${v.v!=null&&!v.vGap?sm("在屏幕上 "+fmt(v.v)):""}</td>${modeTds(v)}</tr>`});
-  if(rest>=60)rows.push(`<tr><td><div class="lname"><span class="dot" style="background:var(--l0)"></span><span>未分课 <span class="small">${D.hasLs?"数据不全":"11-03 晚以前没有按课记录"}</span></span></div></td><td data-l="练习时间">${fmt(rest)}</td>${D.hasLs?'<td data-l="闪卡">–</td><td data-l="词义">–</td><td data-l="多音字">–</td><td data-l="字辨">–</td><td data-l="合计">–</td>':modeTds({q:D.questions,c:D.correct,cards:D.cards})}</tr>`);
+  if(rest>=60)rows.push(`<tr><td><div class="lname"><span class="dot" style="background:var(--l0)"></span><span>未分课 <span class="small">${D.hasLs?"数据不全":"11-03 晚以前没有按课记录"}</span></span></div></td><td data-l="练习时间">${fmt(rest)}</td>${D.hasLs?'<td data-l="闪卡">–</td><td data-l="词义">–</td><td data-l="多音字">–</td><td data-l="字辨">–</td><td data-l="题目合计">–</td>':modeTds({q:D.questions,c:D.correct,cards:D.cards})}</tr>`);
   const noMd=D.mdGap||ids.some(id=>D.ls[id].q>0&&!D.ls[id].md)||(rest>=60&&!D.hasLs&&D.questions>0);
-  if(rows.length)b+=`<div><h3>按课</h3><div class="tbl-wrap"><table class="lt"><thead><tr><th>课文</th><th>练习时间</th>${MODE_TH}</tr></thead><tbody>${rows.join("")}</tbody></table></div>${noMd?`<p class="note">词义、多音字、字辨分开的题数从 11 月 7 日起记录；更早的练习（或另一台设备还在用旧页面时的练习）只算在“合计”里。</p>`:""}</div>`;
+  if(rows.length)b+=`<div><h3>按课</h3><div class="tbl-wrap"><table class="lt"><thead><tr><th>课文</th><th>练习时间</th>${MODE_TH}</tr></thead><tbody>${rows.join("")}</tbody></table></div>${noMd?`<p class="note">词义、多音字、字辨分开的题数从 11 月 7 日起记录；更早的练习（或另一台设备还在用旧页面时的练习）只算在“题目合计”里。</p>`:""}</div>`;
   // Missed
   b+=`<div><h3>答错的词${D.missed.size?`（${D.missed.size}）`:""}</h3>${D.missed.size?`<div class="miss">${[...D.missed].map(w=>`<span>${esc(w)}</span>`).join("")}</div>`:`<p class="note">${D.questions?"没有答错的词。":"这天没有答题。"}</p>`}</div>`;
   const vis=D.vis!=null&&!D.visGap?` · 在屏幕上 ${fmt(D.vis)}`:"";
