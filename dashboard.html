@@ -51,10 +51,6 @@ th{font-size:13px;color:var(--muted);font-weight:700}
 th:first-child,td:first-child{text-align:left}
 tr:last-child td{border-bottom:0}
 .tbl-wrap{overflow-x:auto}
-table.mt{width:auto;min-width:min(100%,360px);margin:0 0 2px 18px;font-size:13.5px;background:var(--paper);border-radius:8px}
-table.mt th,table.mt td{padding:3px 12px;border-bottom:1px solid var(--line);text-align:right}
-table.mt th:first-child,table.mt td:first-child{text-align:left}
-table.mt tr:last-child td{border-bottom:0}
 
 td{white-space:nowrap}td:first-child{white-space:normal}
 @media (max-width:600px){
@@ -64,7 +60,6 @@ td{white-space:nowrap}td:first-child{white-space:normal}
   table.lt>tbody>tr>td{border:0;padding:0;text-align:left;white-space:normal}
   table.lt>tbody>tr>td:first-child{grid-column:1/-1}
   table.lt>tbody>tr>td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--muted)}
-  table.mt{margin-left:0;width:100%}
 }
 .lname{display:flex;gap:8px;align-items:baseline}
 .dot{flex:none;width:10px;height:10px;border-radius:2px;display:inline-block}
@@ -127,13 +122,6 @@ const modeTds=v=>{const md=v.md||{},L=md.learn;
   return `<td data-l="闪卡">${v.cards?v.cards+" 张"+(L&&L.unk?sm("不熟 "+L.unk):""):"–"}</td>`+one("quiz","词义")+one("poly","多音字")+one("zb","字辨")+
     `<td data-l="合计">${v.q?v.q+" 题"+sm(pct(v.c,v.q)):"–"}</td>`};
 const MODE_TH="<th>闪卡</th><th>词义</th><th>多音字</th><th>字辨</th><th>合计</th>";
-const mdTable=(md,tabs)=>{if(!md&&!tabs)return"";md=md||{};
-  const R=[["learn","闪卡"],["quiz","词义"],["poly","多音字"],["zb","字辨"],["list","词语表"],["progress","记录页"]].map(([k,n])=>{
-    const t=tabs&&tabs[k]>=1?fmt(tabs[k]):"";let did="",acc="";
-    if(k==="learn"){const L=md.learn;if(L&&L.n){did=L.n+" 张";acc=L.unk?`还不熟 ${L.unk} 张`:"都会了"}}
-    else if(md[k]&&md[k].q){did=md[k].q+" 题";acc=pct(md[k].c,md[k].q)}
-    return (t||did)?`<tr><td>${n}</td>${tabs?`<td>${t||"–"}</td>`:""}<td>${did||"–"}</td><td>${acc||"–"}</td></tr>`:""}).join("");
-  return R?`<table class="mt"><thead><tr><th>方式</th>${tabs?"<th>练习时间</th>":""}<th>做了</th><th>正确率</th></tr></thead><tbody>${R}</tbody></table>`:""};
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -272,9 +260,6 @@ function render(){
       <td data-l="易错">${p.tricky||"–"}</td></tr>`}).join("")}
     </tbody></table></div>
     <p class="note" style="margin-top:8px">练过 = 词义、多音字、字辨里做过的题（闪卡不算）。易错 = 答错、闪卡点“还不熟”或在词语表点 ☆ 的题，连续答对 2 次后移出——所以可能出现“练过 0 · 易错 2”。按课的时间从 11 月 3 日晚开始记录，“在屏幕上”从 11 月 5 日开始。</p>`;
-  const tabTot={};let tabKnown=false,mdTot=null;inRange.forEach(D=>{if(D.md)mdTot=addMd(mdTot,D.md);if(D.tabs){tabKnown=true;Object.entries(D.tabs).forEach(([k,v])=>tabTot[k]=(tabTot[k]||0)+v)}});
-  if(tabKnown||mdTot){const mt=mdTable(mdTot,tabTot);
-    if(mt)h+=`<h3 style="margin:14px 0 4px;font:700 15px/1.3 var(--body)">最近 ${range} 天按练习方式</h3>${mt.replace('class="mt"','class="mt" style="margin-left:0"')}<p class="note" style="margin-top:4px">练习时间从 11 月 5 日起记录，“做了”从 11 月 7 日起记录。</p>`}
   h+=`</section>`;
 
   // Daily detail, newest first.
