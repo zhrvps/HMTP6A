@@ -124,7 +124,7 @@ const num=v=>typeof v==="number"&&isFinite(v)?v:(+v||0);
 const pad=n=>String(n).padStart(2,"0");
 const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const addDays=(s,k)=>{const [y,m,d]=s.split("-").map(Number);return ymd(new Date(y,m-1,d+k))};
-const fmt=s=>{s=num(s);if(s<60)return Math.round(s)+" 秒";const m=Math.round(s/60);return m<60?m+" 分钟":Math.floor(m/60)+" 小时 "+(m%60)+" 分钟"};
+const fmt=s=>{s=Math.round(num(s));if(!s)return "0 分钟";if(s<60)return s+" 秒";const m=Math.round(s/60);return m<60?m+" 分钟":Math.floor(m/60)+" 小时 "+(m%60)+" 分钟"};
 const pct=(c,q)=>q?Math.round(c/q*100)+"%":"–";
 const hm=t=>new Date(t).toLocaleTimeString("en-SG",{hour:"2-digit",minute:"2-digit",hour12:false});
 const WD="日一二三四五六";
@@ -175,8 +175,8 @@ function buildDays(){
     D.seconds+=num(d.seconds);D.questions+=num(d.questions);D.correct+=num(d.correct);D.cards+=num(d.cards);D.quizzes+=num(d.quizzes);
     const visOk=d.vis!=null&&num(d.vis)>0&&num(d.vis)>=num(d.seconds)-1;if(visOk)D.vis=(D.vis||0)+num(d.vis);else if(num(d.seconds)>0)D.visGap=true;
     if(d.ls&&typeof d.ls==="object"&&Object.keys(d.ls).length){D.hasLs=true;Object.entries(d.ls).forEach(([n,v])=>{const id=(r.chapter||d.chapter||601)+"-"+n;
-      const L=D.ls[id]||(D.ls[id]={s:0,v:null,q:0,c:0,cards:0});if(v.md)L.md=addMd(L.md,v.md);L.s+=num(v.s);L.q+=num(v.q);L.c+=num(v.c);L.cards+=num(v.cards);if(v.v!=null&&num(v.v)>0)L.v=(L.v||0)+num(v.v)})}
-    if(d.md&&typeof d.md==="object"&&Object.keys(d.md).length)D.md=addMd(D.md,d.md);
+      const L=D.ls[id]||(D.ls[id]={s:0,v:null,q:0,c:0,cards:0});if(v.md)L.md=addMd(L.md,v.md);L.s+=num(v.s);L.q+=num(v.q);L.c+=num(v.c);L.cards+=num(v.cards);if(v.v!=null&&num(v.v)>0)L.v=(L.v||0)+num(v.v);else if(num(v.s)>0)L.vGap=true})}
+    if(d.md&&typeof d.md==="object"&&Object.keys(d.md).length)D.md=addMd(D.md,d.md);else if(num(d.questions)>0||num(d.cards)>0)D.mdGap=true;
     if(d.tabs&&typeof d.tabs==="object"){D.tabs=D.tabs||{};Object.entries(d.tabs).forEach(([k,v])=>D.tabs[k]=(D.tabs[k]||0)+num(v))}
     (d.missed||[]).forEach(w=>D.missed.add(String(w)));
     if(Array.isArray(d.sess)&&d.sess.length){D.hasSess=true;d.sess.forEach(s=>{if(s&&s.a)D.sess.push({a:num(s.a),b:num(s.b)||num(s.a),act:num(s.act),vis:num(s.vis)})})}
@@ -241,7 +241,7 @@ function render(){
     (p.data.tricky||[]).forEach(k=>{const n=lessonOfKey(k);if(!n)return;const id=ch+"-"+n;(prog[id]=prog[id]||{seen:0,tricky:0}).tricky++})});
   const lastDay={};[...DAYS.values()].forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{if((v.s>0||v.q>0||v.cards>0)&&(!lastDay[id]||D.date>lastDay[id]))lastDay[id]=D.date}));
   const lsTot={};inRange.forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{const t=lsTot[id]||(lsTot[id]={s:0,v:0,vKnown:false,q:0,c:0,cards:0,days:0});
-    if(v.md)t.md=addMd(t.md,v.md);t.s+=v.s;t.q+=v.q;t.c+=v.c;t.cards+=v.cards;if(v.v!=null){t.v+=v.v;t.vKnown=true}else if(v.s>0)t.vGap=true;if(v.s>0||v.q>0||v.cards>0)t.days++}));
+    if(v.md)t.md=addMd(t.md,v.md);t.s+=v.s;t.q+=v.q;t.c+=v.c;t.cards+=v.cards;if(v.v!=null&&!v.vGap){t.v+=v.v;t.vKnown=true}else if(v.s>0)t.vGap=true;if(v.s>0||v.q>0||v.cards>0)t.days++}));
   const lessonIds=order.filter(id=>lessonInfo(id).total||lsTot[id]||prog[id]);
   h+=`<section class="panel"><h2>按课看（最近 ${range} 天 · 词语进度为目前累计）</h2><div class="tbl-wrap"><table class="lt">
     <thead><tr><th>课文</th><th>练习时间</th><th>天数</th><th>题数</th><th>正确率</th><th>闪卡</th><th>练过</th><th>易错</th></tr></thead><tbody>
@@ -281,13 +281,13 @@ function dayHTML(D,open){
        const t=tb[k]?fmt(tb[k]):"–";let did="–",acc="";
        if(k==="learn"){const L=md.learn;did=L&&L.n?`${L.n} 张`:hasMd?"0 张":"–";acc=L&&L.unk?`还不熟 ${L.unk} 张`:L&&L.n?"都会了":""}
        else if(k==="quiz"||k==="poly"||k==="zb"){const x=md[k];did=x&&x.q?`${x.q} 题`:hasMd?"0 题":"–";acc=x&&x.q?pct(x.c,x.q):""}
-       return `<tr><td>${n}</td><td>${t}</td><td>${did}</td><td>${acc||"–"}</td></tr>`}).join("")}</tbody></table></div>${hasMd?"":`<p class="note">每种方式做了几题从 11 月 7 日起记录${D.date>=MD_FROM?"（这天更新前的练习没有分开记）":""}。</p>`}</div>`}
+       return `<tr><td>${n}</td><td>${t}</td><td>${did}</td><td>${acc||"–"}</td></tr>`}).join("")}</tbody></table></div>${hasMd?(D.mdGap?`<p class="note">有一部分练习（页面更新前、或另一台设备还在用旧页面）没有分方式记，所以“做了”加起来会比当天总题数少。</p>`:""):`<p class="note">每种方式做了几题从 11 月 7 日起记录${D.date>=MD_FROM?"（这天更新前的练习没有分开记）":""}。</p>`}</div>`}
    else if(!D.tabs&&practiced(D))b+=`<div><h3>按练习方式</h3><p class="note">这天没有分方式的记录（11 月 5 日起才有）。</p></div>`}
   // Lessons
   const ids=Object.keys(D.ls).filter(id=>{const v=D.ls[id];return v.s>0||v.q>0||v.cards>0}).sort((a,b)=>{const [ac,an]=a.split("-").map(Number),[bc,bn]=b.split("-").map(Number);return ac-bc||an-bn});
   const rows=ids.map(id=>{const v=D.ls[id],I=lessonInfo(id);
     return `<tr><td><div class="lname"><span class="dot" style="background:${lessonColor(id)}"></span><span>${I.label}${I.title?` <span class="small">${esc(I.title)}</span>`:""}${v.md?`<br><span class="small">${mdLine(v.md)}</span>`:""}</span></div></td>
-      <td>${fmt(v.s)}${v.v!=null?`<br><span class="small">在屏幕上 ${fmt(v.v)}</span>`:""}</td><td>${v.q||"–"}</td><td>${pct(v.c,v.q)}</td><td>${v.cards||"–"}</td></tr>`});
+      <td>${fmt(v.s)}${v.v!=null&&!v.vGap?`<br><span class="small">在屏幕上 ${fmt(v.v)}</span>`:""}</td><td>${v.q||"–"}</td><td>${pct(v.c,v.q)}</td><td>${v.cards||"–"}</td></tr>`});
   if(rest>=60)rows.push(`<tr><td><div class="lname"><span class="dot" style="background:var(--l0)"></span><span>未分课 <span class="small">${D.hasLs?"数据不全":"11-03 晚以前没有按课记录"}</span></span></div></td><td>${fmt(rest)}</td><td>${D.hasLs?"–":D.questions||"–"}</td><td>${D.hasLs?"–":pct(D.correct,D.questions)}</td><td>${D.hasLs?"–":D.cards||"–"}</td></tr>`);
   if(rows.length)b+=`<div><h3>按课</h3><div class="tbl-wrap"><table><thead><tr><th>课文</th><th>练习时间</th><th>题数</th><th>正确率</th><th>闪卡</th></tr></thead><tbody>${rows.join("")}</tbody></table></div></div>`;
   // Missed
