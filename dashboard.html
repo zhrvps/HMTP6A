@@ -238,7 +238,7 @@ function render(){
   svg+=`</svg>`;
   const used=order.filter(id=>inRange.some(D=>D.ls[id]&&D.ls[id].s>0));
   const hasRest=inRange.some(D=>D.seconds-Object.values(D.ls).reduce((a,v)=>a+v.s,0)>0.5);
-  h+=`<section class="panel"><h2>每天练习时间（分钟）</h2>${svg}<div class="legend">${used.map(id=>{const I=lessonInfo(id);return `<span><i style="background:${lessonColor(id)}"></i>${I.label}${I.title?" "+esc(I.title):""}</span>`}).join("")}${hasRest?`<span><i style="background:var(--l0)"></i>未分课（11-03 晚以前的练习）</span>`:""}${!used.length&&!hasRest?"<span>这段时间还没有练习</span>":""}</div></section>`;
+  h+=`<section class="panel"><h2>每日练习时间（分钟）</h2>${svg}<div class="legend">${used.map(id=>{const I=lessonInfo(id);return `<span><i style="background:${lessonColor(id)}"></i>${I.label}${I.title?" "+esc(I.title):""}</span>`}).join("")}${hasRest?`<span><i style="background:var(--l0)"></i>未分课（11-03 晚以前的练习）</span>`:""}${!used.length&&!hasRest?"<span>这段时间还没有练习</span>":""}</div></section>`;
 
   // Per-lesson summary for the range + mastery from the latest learner row.
   const prog={};Object.entries(PROG||{}).forEach(([ch,p])=>{(p.data.items||[]).forEach(it=>{const k=Array.isArray(it)?it[0]:it&&it.k;const n=lessonOfKey(k);if(!n)return;const id=ch+"-"+n;(prog[id]=prog[id]||{seen:0,tricky:0}).seen++});
@@ -262,7 +262,7 @@ function render(){
 
   // Daily detail, newest first.
   const shown=[...dates].reverse().filter(x=>DAYS.get(x));
-  h+=`<section><h2>每天的明细</h2>`+(shown.length?`<div class="days">${shown.map((x,i)=>dayHTML(DAYS.get(x),i===0)).join("")}</div>`:`<div class="panel empty">最近 ${range} 天没有练习记录。</div>`)+`</section>`;
+  h+=`<section><h2>每日明细</h2>`+(shown.length?`<div class="days">${shown.map((x,i)=>dayHTML(DAYS.get(x),i===0)).join("")}</div>`:`<div class="panel empty">最近 ${range} 天没有练习记录。</div>`)+`</section>`;
   $("#out").innerHTML=h;
 }
 
