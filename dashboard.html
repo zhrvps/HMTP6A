@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>华文练习看板</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;700;900&display=swap">
+<style>
+/* Parent dashboard for the Chinese practice site. Read-only view of vocab_progress (chapters 600–699). */
+:root{
+  --paper:#F6F8FC; --surface:#FFFFFF; --ink:#18233A; --muted:#5B6782; --line:#D6DDEB;
+  --blue:#2350C8; --blue-soft:#E3EAFB; --hl:#FFE066; --good:#1E8A4C; --bad:#C23B3B;
+  --l1:#2350C8; --l2:#D9731A; --l3:#1E8A4C; --l4:#7B4BC4; --l5:#0F8C9B; --l6:#C2416B; --l7:#8C7A12; --l0:#A9B3C7;
+  --display:"Baloo 2","Noto Sans SC","PingFang SC",system-ui,sans-serif; --body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{--paper:#0F1626;--surface:#172238;--ink:#E8EDF7;--muted:#9AA6C0;--line:#2B3954;--blue:#7FA2FF;--blue-soft:#1F2D4D;--hl:#8A6F00;--good:#5BD08A;--bad:#FF8A80;
+  --l1:#7FA2FF;--l2:#F2A25C;--l3:#5BD08A;--l4:#B694F0;--l5:#4FC7D4;--l6:#F07FA2;--l7:#D2BE4E;--l0:#5A6784;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:880px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+a{color:var(--blue)}
+h1{margin:0;font:900 clamp(26px,5.5vw,36px)/1.15 var(--body);text-wrap:balance}
+h1 mark{background:linear-gradient(transparent 55%,var(--hl) 55%);color:inherit}
+h2{margin:0 0 10px;font:700 19px/1.3 var(--body)}
+.sub{margin:4px 0 0;color:var(--muted);font-size:15px}
+.bar-top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;font-size:15px}
+select{background:var(--surface);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:var(--surface);color:var(--ink);border:0;padding:6px 12px;font:inherit;cursor:pointer}
+.seg button+button{border-left:2px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--blue);color:var(--surface);font-weight:700}
+.linkbtn{background:none;border:0;padding:0;color:var(--blue);text-decoration:underline;font:inherit;cursor:pointer}
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px 14px}
+.kpi .lab{font-size:14px;color:var(--muted)}
+.kpi .val{font:800 26px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.kpi .val small{font:700 15px var(--body)}
+.kpi .det{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg.chart{display:block;width:100%;height:auto}
+svg.chart text{fill:var(--muted);font:12px var(--body)}
+svg.chart line{stroke:var(--line)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 6px;text-align:right;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-size:13px;color:var(--muted);font-weight:700}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+.tbl-wrap{overflow-x:auto}
+td{white-space:nowrap}td:first-child{white-space:normal}
+@media (max-width:600px){
+  table.lt thead{display:none}
+  table.lt tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 8px;padding:10px 0;border-bottom:1px solid var(--line)}
+  table.lt tr:last-child{border-bottom:0}
+  table.lt td{border:0;padding:0;text-align:left;white-space:normal}
+  table.lt td:first-child{grid-column:1/-1}
+  table.lt td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--muted)}
+}
+.lname{display:flex;gap:8px;align-items:baseline}
+.dot{flex:none;width:10px;height:10px;border-radius:2px;display:inline-block}
+.small{font-size:12.5px;color:var(--muted)}
+.prog{height:6px;background:var(--blue-soft);border-radius:6px;overflow:hidden;margin-top:4px;min-width:60px}
+.prog i{display:block;height:100%;background:var(--blue)}
+.days{display:flex;flex-direction:column;gap:10px}
+details.day{background:var(--surface);border:2px solid var(--line);border-radius:14px}
+details.day[open]{border-color:var(--blue)}
+details.day summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline}
+details.day summary::-webkit-details-marker{display:none}
+.dname{font:700 17px/1.3 var(--body)}
+.dsum{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;grid-column:1/-1}
+.chev{color:var(--blue);font-size:14px}
+details.day[open] .chev{transform:rotate(90deg)}
+.dbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
+.dbody h3{margin:0 0 4px;font:700 14px/1.3 var(--body);color:var(--muted)}
+.sess{margin:0;padding:0;list-style:none;font-size:14.5px;font-variant-numeric:tabular-nums}
+.sess li{padding:2px 0}
+.miss{display:flex;flex-wrap:wrap;gap:6px}
+.miss span{background:var(--blue-soft);border-radius:8px;padding:1px 8px;font-size:15px}
+.note{font-size:13px;color:var(--muted);margin:0}
+.note.err{color:var(--bad)}
+.empty{color:var(--muted);text-align:center;padding:24px 8px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>华文练习<mark>看板</mark></h1>
+    <p class="sub">欢乐伙伴 6A 词语练习 · 给家长看的每日记录 · <a href="index.html">回到练习首页</a></p>
+  </header>
+  <div class="bar-top">
+    <label>孩子：<select id="who"></select></label>
+    <span class="seg" id="range" role="group" aria-label="时间段">
+      <button data-d="7">7 天</button><button data-d="14">14 天</button><button data-d="30">30 天</button>
+    </span>
+    <button class="linkbtn" id="reload">刷新</button>
+  </div>
+  <div id="out"><p class="empty">正在读取练习记录……</p></div>
+  <p id="note" class="note"></p>
+</div>
+<script>
+const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
+// Books: chapter number → lessons. Keep in sync with index.html's LS when lessons change; 6B will be 602.
+const BOOKS={601:{name:"6A",lessons:[
+  {n:1,t:"加油！加油！",total:57},{n:2,t:"祖孙情",total:62},{n:3,t:"美食小侦探",total:55},
+  {n:4,t:"宝贵的礼物",total:53},{n:5,t:"小故事，大道理",total:67},{n:6,t:"精彩三国",total:70},{n:7,t:"世界走透透",total:62}]}};
+const CN="一二三四五六七八九十";
+const TABS=[["learn","闪卡"],["quiz","词义"],["poly","多音字"],["zb","字辨"],["list","词语表"],["progress","记录页"]];
+const VIEW_KEY="p6cn-dash-view";
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const lessonOfKey=k=>{const m=String(k).match(/^(?:m:|z:m:|p:m:|p:L)(\d)/);return m?+m[1]:0};
+const num=v=>typeof v==="number"&&isFinite(v)?v:(+v||0);
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const addDays=(s,k)=>{const [y,m,d]=s.split("-").map(Number);return ymd(new Date(y,m-1,d+k))};
+const fmt=s=>{s=num(s);if(s<60)return Math.round(s)+" 秒";const m=Math.round(s/60);return m<60?m+" 分钟":Math.floor(m/60)+" 小时 "+(m%60)+" 分钟"};
+const pct=(c,q)=>q?Math.round(c/q*100)+"%":"–";
+const hm=t=>new Date(t).toLocaleTimeString("en-SG",{hour:"2-digit",minute:"2-digit",hour12:false});
+const WD="日一二三四五六";
+const dayLabel=s=>{const [y,m,d]=s.split("-").map(Number);const w=new Date(y,m-1,d).getDay();const t=ymd(new Date());
+  return `${m}月${d}日 星期${WD[w]}`+(s===t?" · 今天":s===addDays(t,-1)?" · 昨天":"")};
+// Lesson ids are "<chapter>-<lesson>" so 6B can be added without clashing.
+const multiBook=()=>Object.keys(BOOKS).length>1;
+function lessonInfo(id){const [ch,n]=id.split("-").map(Number);const b=BOOKS[ch];const l=b&&b.lessons.find(x=>x.n===n);
+  return {ch,n,title:l?l.t:"",total:l?l.total:0,label:(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+(CN[n-1]||n)+"课"}}
+const lessonColor=id=>{const n=+id.split("-")[1];return n>=1&&n<=7?`var(--l${n})`:"var(--l0)"};
+
+let ROWS=[], KIDS=[], DAYS=new Map(), PROG=null, sel="", range=14;
+try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||"{}");sel=v.who||"";range=[7,14,30].includes(v.range)?v.range:14}catch(e){}
+function saveView(){try{localStorage.setItem(VIEW_KEY,JSON.stringify({who:sel,range}))}catch(e){}}
+
+async function fetchAll(){
+  const rows=[];
+  for(let off=0;;off+=1000){
+    const r=await fetch(`${SUPA.url}/rest/v1/vocab_progress?select=learner,chapter,kind,key,data,updated_at`
+      +`&chapter=gte.600&chapter=lt.700&order=learner,chapter,kind,key&offset=${off}&limit=1000`,{headers:{apikey:SUPA.key}});
+    if(!r.ok){let m="";try{const j=await r.json();m=j.message||""}catch(e){}throw new Error("error "+r.status+(m?"："+m:""))}
+    const page=await r.json();rows.push(...page);
+    if(page.length<1000)break;
+  }
+  return rows;
+}
+
+// Names: merge case-insensitively, show the most common spelling.
+function buildKids(){
+  const g=new Map();
+  ROWS.forEach(r=>{const k=String(r.learner||"").trim().toLowerCase();if(!k)return;
+    if(!g.has(k))g.set(k,{key:k,spell:new Map(),last:""});const o=g.get(k);
+    const sp=String(r.learner).trim();o.spell.set(sp,(o.spell.get(sp)||0)+1);
+    const d=r.kind==="usage"&&r.data&&r.data.date||"";if(d>o.last)o.last=d});
+  KIDS=[...g.values()].map(o=>({key:o.key,last:o.last,name:[...o.spell].sort((a,b)=>b[1]-a[1])[0][0]}))
+    .sort((a,b)=>(a.key==="tester")-(b.key==="tester")||b.last.localeCompare(a.last)||a.key.localeCompare(b.key));
+}
+
+// Sum all devices per date. Fields missing in old rows stay "unknown" (null), not 0.
+function buildDays(){
+  DAYS=new Map();
+  ROWS.forEach(r=>{
+    if(String(r.learner||"").trim().toLowerCase()!==sel||!r.data)return;
+    const d=r.data;
+    if(r.kind!=="usage"||!d.date)return;
+    if(!DAYS.has(d.date))DAYS.set(d.date,{date:d.date,seconds:0,vis:null,questions:0,correct:0,cards:0,quizzes:0,ls:{},hasLs:false,tabs:null,missed:new Set(),sess:[],hasSess:false,devices:new Set()});
+    const D=DAYS.get(d.date);D.devices.add(d.device||r.key);
+    D.seconds+=num(d.seconds);D.questions+=num(d.questions);D.correct+=num(d.correct);D.cards+=num(d.cards);D.quizzes+=num(d.quizzes);
+    if(d.vis!=null)D.vis=(D.vis||0)+num(d.vis);
+    if(d.ls&&typeof d.ls==="object"){D.hasLs=true;Object.entries(d.ls).forEach(([n,v])=>{const id=(r.chapter||d.chapter||601)+"-"+n;
+      const L=D.ls[id]||(D.ls[id]={s:0,v:null,q:0,c:0,cards:0});L.s+=num(v.s);L.q+=num(v.q);L.c+=num(v.c);L.cards+=num(v.cards);if(v.v!=null)L.v=(L.v||0)+num(v.v)})}
+    if(d.tabs&&typeof d.tabs==="object"){D.tabs=D.tabs||{};Object.entries(d.tabs).forEach(([k,v])=>D.tabs[k]=(D.tabs[k]||0)+num(v))}
+    (d.missed||[]).forEach(w=>D.missed.add(String(w)));
+    if(Array.isArray(d.sess)){D.hasSess=true;d.sess.forEach(s=>{if(s&&s.a)D.sess.push({a:num(s.a),b:num(s.b)||num(s.a),act:num(s.act),vis:num(s.vis)})})}
+  });
+  // Learner rows: latest updated_at across all spellings (and chapters, one per chapter).
+  const latest={};
+  ROWS.forEach(r=>{if(r.kind!=="learner"||String(r.learner||"").trim().toLowerCase()!==sel||!r.data)return;
+    const at=r.updated_at||r.data.updatedAt||"";if(!latest[r.chapter]||at>latest[r.chapter].at)latest[r.chapter]={data:r.data,at}});
+  PROG=latest;
+}
+const practiced=D=>D&&(D.seconds>0||D.questions>0);
+function mergeSess(list){
+  const s=[...list].sort((x,y)=>x.a-y.a),out=[];
+  s.forEach(x=>{const p=out[out.length-1];if(p&&x.a-p.b<5*60000){p.b=Math.max(p.b,x.b);p.act+=x.act;p.vis+=x.vis}else out.push({...x})});
+  return out;
+}
+function sumDays(list){const t={seconds:0,questions:0,correct:0,cards:0};list.forEach(D=>{if(!D)return;t.seconds+=D.seconds;t.questions+=D.questions;t.correct+=D.correct;t.cards+=D.cards});return t}
+
+function render(){
+  if(!KIDS.length){$("#out").innerHTML=`<div class="panel empty">还没有华文练习记录。孩子在练习页练过并显示“进度已保存”后，这里就会出现。</div>`;return}
+  const today=ymd(new Date());
+  const dates=[];for(let i=range-1;i>=0;i--)dates.push(addDays(today,-i));
+  const T=DAYS.get(today),last7=[];for(let i=0;i<7;i++)last7.push(DAYS.get(addDays(today,-i)));
+  const w=sumDays(last7),daysOn=dates.filter(x=>practiced(DAYS.get(x))).length;
+  let streak=0,cur=practiced(T)?today:addDays(today,-1);while(practiced(DAYS.get(cur))){streak++;cur=addDays(cur,-1)}
+  const kpi=(lab,val,det)=>`<div class="kpi"><div class="lab">${lab}</div><div class="val">${val}</div><div class="det">${det}</div></div>`;
+  let h=`<div class="kpis">
+    ${kpi("今天",T?fmt(T.seconds):"0 分钟",T&&T.questions?`${T.questions} 题 · 答对 ${pct(T.correct,T.questions)}`:"还没有答题")}
+    ${kpi("最近 7 天",fmt(w.seconds),w.questions?`${w.questions} 题 · 答对 ${pct(w.correct,w.questions)}`:"没有答题")}
+    ${kpi("练习天数",`${daysOn}<small> / ${range} 天</small>`,`最近 ${range} 天里有练习的天数`)}
+    ${kpi("连续天数",`${streak}<small> 天</small>`,practiced(T)?"今天已练":"今天还没练（不算断）")}
+  </div>`;
+
+  // Lesson ids seen in range, ordered by chapter then lesson.
+  const inRange=dates.map(x=>DAYS.get(x)).filter(Boolean);
+  const ids=new Set();inRange.forEach(D=>Object.keys(D.ls).forEach(id=>ids.add(id)));
+  Object.keys(BOOKS).forEach(ch=>BOOKS[ch].lessons.forEach(l=>ids.add(ch+"-"+l.n)));
+  const order=[...ids].sort((a,b)=>{const [ac,an]=a.split("-").map(Number),[bc,bn]=b.split("-").map(Number);return ac-bc||an-bn});
+
+  // Daily bars, stacked by lesson; the remainder without lesson data is grey.
+  const maxMin=Math.max(10,...dates.map(x=>{const D=DAYS.get(x);return D?D.seconds/60:0}));
+  const step=maxMin<=20?5:maxMin<=60?15:maxMin<=120?30:60,top=Math.ceil(maxMin/step)*step;
+  const W=Math.max(300,Math.min(840,($("#out").clientWidth||760)-36)),H=W<500?180:200,L=40,B=26,cw=(W-L-8)/dates.length,bw=Math.max(4,Math.min(28,cw*.66));
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="每天练习分钟数，按课着色">`;
+  for(let v=0;v<=top;v+=step){const y=H-B-(v/top)*(H-B-10);svg+=`<line x1="${L}" x2="${W-4}" y1="${y}" y2="${y}"/><text x="${L-6}" y="${y+4}" text-anchor="end">${v}</text>`}
+  dates.forEach((x,i)=>{const D=DAYS.get(x),cx=L+cw*i+cw/2;let y=H-B;
+    if(D){let segs=order.filter(id=>D.ls[id]&&D.ls[id].s>0).map(id=>[id,D.ls[id].s]);
+      const rest=D.seconds-segs.reduce((a,s)=>a+s[1],0);if(rest>0.5)segs.push(["0",rest]);
+      const tip=`${dayLabel(x)}：${fmt(D.seconds)}`+segs.map(([id,s])=>`\n${id==="0"?"未分课":lessonInfo(id).label}：${fmt(s)}`).join("");
+      svg+=`<g><title>${esc(tip)}</title>`;
+      segs.forEach(([id,s],k)=>{const hh=(s/60/top)*(H-B-10);y-=hh;svg+=`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${Math.max(0,hh-(k<segs.length-1?1:0))}" rx="${k===segs.length-1?3:0}" fill="${id==="0"?"var(--l0)":lessonColor(id)}"/>`});
+      svg+=`<rect x="${cx-cw/2}" y="10" width="${cw}" height="${H-B-10}" fill="transparent"/></g>`}
+    const every=Math.max(1,Math.ceil(28/cw));
+    if((dates.length-1-i)%every===0){const d=+x.slice(8);svg+=`<text x="${cx}" y="${H-8}" text-anchor="middle"${x===today?' style="font-weight:700"':""}>${x===today?"今天":d}</text>`}});
+  svg+=`</svg>`;
+  const used=order.filter(id=>inRange.some(D=>D.ls[id]&&D.ls[id].s>0));
+  const hasRest=inRange.some(D=>D.seconds-Object.values(D.ls).reduce((a,v)=>a+v.s,0)>0.5);
+  h+=`<section class="panel"><h2>每天练习时间（分钟）</h2>${svg}<div class="legend">${used.map(id=>{const I=lessonInfo(id);return `<span><i style="background:${lessonColor(id)}"></i>${I.label}${I.title?" "+esc(I.title):""}</span>`}).join("")}${hasRest?`<span><i style="background:var(--l0)"></i>未分课（11-03 晚以前的练习）</span>`:""}${!used.length&&!hasRest?"<span>这段时间还没有练习</span>":""}</div></section>`;
+
+  // Per-lesson summary for the range + mastery from the latest learner row.
+  const prog={};Object.entries(PROG||{}).forEach(([ch,p])=>{(p.data.items||[]).forEach(it=>{const k=Array.isArray(it)?it[0]:it&&it.k;const n=lessonOfKey(k);if(!n)return;const id=ch+"-"+n;(prog[id]=prog[id]||{seen:0,tricky:0}).seen++});
+    (p.data.tricky||[]).forEach(k=>{const n=lessonOfKey(k);if(!n)return;const id=ch+"-"+n;(prog[id]=prog[id]||{seen:0,tricky:0}).tricky++})});
+  const lastDay={};[...DAYS.values()].forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{if((v.s>0||v.q>0||v.cards>0)&&(!lastDay[id]||D.date>lastDay[id]))lastDay[id]=D.date}));
+  const lsTot={};inRange.forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{const t=lsTot[id]||(lsTot[id]={s:0,v:0,vKnown:false,q:0,c:0,cards:0,days:0});
+    t.s+=v.s;t.q+=v.q;t.c+=v.c;t.cards+=v.cards;if(v.v!=null){t.v+=v.v;t.vKnown=true}if(v.s>0||v.q>0||v.cards>0)t.days++}));
+  const lessonIds=order.filter(id=>lessonInfo(id).total||lsTot[id]||prog[id]);
+  h+=`<section class="panel"><h2>按课看（最近 ${range} 天 · 词语进度为目前累计）</h2><div class="tbl-wrap"><table class="lt">
+    <thead><tr><th>课文</th><th>练习时间</th><th>天数</th><th>题数</th><th>正确率</th><th>闪卡</th><th>练过</th><th>易错</th></tr></thead><tbody>
+    ${lessonIds.map(id=>{const I=lessonInfo(id),t=lsTot[id],p=prog[id]||{seen:0,tricky:0};
+      const ld=lastDay[id]?`最近一次：${+lastDay[id].slice(5,7)}月${+lastDay[id].slice(8)}日`:"";
+      return `<tr><td><div class="lname"><span class="dot" style="background:${lessonColor(id)}"></span><span>${I.label}${I.title?`<br><span class="small">${esc(I.title)}</span>`:""}${ld?`<br><span class="small">${ld}</span>`:""}</span></div></td>
+      <td data-l="练习时间">${t&&t.s?fmt(t.s):"–"}${t&&t.vKnown&&t.v?`<br><span class="small">在屏幕上 ${fmt(t.v)}</span>`:""}</td>
+      <td data-l="天数">${t&&t.days?t.days:"–"}</td><td data-l="题数">${t&&t.q?t.q:"–"}</td><td data-l="正确率">${t?pct(t.c,t.q):"–"}</td><td data-l="闪卡">${t&&t.cards?t.cards:"–"}</td>
+      <td data-l="练过">${p.seen}${I.total?`/${I.total}<div class="prog"><i style="width:${Math.min(100,Math.round(p.seen/I.total*100))}%"></i></div>`:""}</td>
+      <td data-l="易错">${p.tricky||"–"}</td></tr>`}).join("")}
+    </tbody></table></div>
+    <p class="note" style="margin-top:8px">练过 = 词义、多音字、字辨里做过的题（闪卡不算）。易错 = 答错、闪卡点“还不熟”或在词语表点 ☆ 的题，连续答对 2 次后移出——所以可能出现“练过 0 · 易错 2”。按课的时间从 11 月 3 日晚开始记录，“在屏幕上”从 11 月 5 日开始。</p>`;
+  const tabTot={};let tabKnown=false;inRange.forEach(D=>{if(D.tabs){tabKnown=true;Object.entries(D.tabs).forEach(([k,v])=>tabTot[k]=(tabTot[k]||0)+v)}});
+  if(tabKnown){const tsum=Object.values(tabTot).reduce((a,b)=>a+b,0);
+    h+=`<p class="note" style="margin-top:6px"><b>按练习方式</b>（11 月 5 日起）：${TABS.filter(([k])=>tabTot[k]>0).map(([k,n])=>`${n} ${fmt(tabTot[k])}${tsum?`（${Math.round(tabTot[k]/tsum*100)}%）`:""}`).join(" · ")||"–"}</p>`}
+  h+=`</section>`;
+
+  // Daily detail, newest first.
+  const shown=[...dates].reverse().filter(x=>DAYS.get(x));
+  h+=`<section><h2>每天的明细</h2>`+(shown.length?`<div class="days">${shown.map((x,i)=>dayHTML(DAYS.get(x),i===0)).join("")}</div>`:`<div class="panel empty">最近 ${range} 天没有练习记录。</div>`)+`</section>`;
+  $("#out").innerHTML=h;
+}
+
+function dayHTML(D,open){
+  const lsSum=Object.values(D.ls).reduce((a,v)=>a+v.s,0),rest=D.seconds-lsSum;
+  let b="";
+  // Sessions
+  if(D.hasSess&&D.sess.length){b+=`<div><h3>练习时间段</h3><ul class="sess">${mergeSess(D.sess).map(s=>`<li>${hm(s.a)}–${hm(s.b)} · ${fmt(s.act)}练习 / ${fmt(s.vis)}在屏幕上</li>`).join("")}</ul></div>`}
+  else b+=`<div><h3>练习时间段</h3><p class="note">${D.hasSess?"没有记录到练习时间段。":"这天没有时间段记录（11 月 5 日起才有）。"}</p></div>`;
+  // Lessons
+  const ids=Object.keys(D.ls).filter(id=>{const v=D.ls[id];return v.s>0||v.q>0||v.cards>0}).sort((a,b)=>{const [ac,an]=a.split("-").map(Number),[bc,bn]=b.split("-").map(Number);return ac-bc||an-bn});
+  const rows=ids.map(id=>{const v=D.ls[id],I=lessonInfo(id);
+    return `<tr><td><div class="lname"><span class="dot" style="background:${lessonColor(id)}"></span><span>${I.label}${I.title?` <span class="small">${esc(I.title)}</span>`:""}</span></div></td>
+      <td>${fmt(v.s)}${v.v!=null?`<br><span class="small">在屏幕上 ${fmt(v.v)}</span>`:""}</td><td>${v.q||"–"}</td><td>${pct(v.c,v.q)}</td><td>${v.cards||"–"}</td></tr>`});
+  if(rest>=60)rows.push(`<tr><td><div class="lname"><span class="dot" style="background:var(--l0)"></span><span>未分课 <span class="small">${D.hasLs?"数据不全":"11-03 晚以前没有按课记录"}</span></span></div></td><td>${fmt(rest)}</td><td>${D.hasLs?"–":D.questions||"–"}</td><td>${D.hasLs?"–":pct(D.correct,D.questions)}</td><td>${D.hasLs?"–":D.cards||"–"}</td></tr>`);
+  if(rows.length)b+=`<div><h3>按课</h3><div class="tbl-wrap"><table><thead><tr><th>课文</th><th>练习时间</th><th>题数</th><th>正确率</th><th>闪卡</th></tr></thead><tbody>${rows.join("")}</tbody></table></div></div>`;
+  // Missed
+  b+=`<div><h3>答错的词${D.missed.size?`（${D.missed.size}）`:""}</h3>${D.missed.size?`<div class="miss">${[...D.missed].map(w=>`<span>${esc(w)}</span>`).join("")}</div>`:`<p class="note">${D.questions?"没有答错的词。":"这天没有答题。"}</p>`}</div>`;
+  const vis=D.vis!=null?` · 在屏幕上 ${fmt(D.vis)}`:"";
+  return `<details class="day"${open?" open":""}><summary><span class="dname">${dayLabel(D.date)}</span><span class="chev">▶</span>
+    <span class="dsum">练习 ${fmt(D.seconds)}${vis} · ${D.questions} 题 · 答对 ${pct(D.correct,D.questions)} · 闪卡 ${D.cards} 张${D.quizzes?` · 做完 ${D.quizzes} 轮`:""}${D.devices.size>1?` · ${D.devices.size} 台设备`:""}</span></summary>
+    <div class="dbody">${b}</div></details>`;
+}
+
+function fillWho(){
+  if(!KIDS.find(k=>k.key===sel)){let me="";try{me=(localStorage.getItem("vocab-learner")||"").trim().toLowerCase()}catch(e){}
+    sel=(KIDS.find(k=>k.key===me)||KIDS.find(k=>k.key!=="tester")||KIDS[0]||{key:""}).key}
+  $("#who").innerHTML=KIDS.map(k=>`<option value="${esc(k.key)}"${k.key===sel?" selected":""}>${esc(k.name)}${k.key==="tester"?"（测试）":""}</option>`).join("");
+}
+function syncRange(){document.querySelectorAll("#range button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.d===range?"true":"false"))}
+
+async function load(){
+  $("#note").className="note";$("#note").textContent="正在读取……";
+  try{
+    ROWS=await fetchAll();buildKids();fillWho();buildDays();render();
+    $("#note").textContent=`记录来自网上的练习进度（只读），所有设备的练习已加在一起。读取于 ${hm(Date.now())}，共 ${ROWS.length} 条记录。`;
+  }catch(e){$("#out").innerHTML=`<div class="panel empty">读不到练习记录。</div>`;$("#note").className="note err";$("#note").textContent="读取失败（"+e.message+"）。请检查网络后点“刷新”。"}
+}
+$("#who").onchange=e=>{sel=e.target.value;saveView();buildDays();render()};
+$("#range").onclick=e=>{const b=e.target.closest("button");if(!b)return;range=+b.dataset.d;saveView();syncRange();render()};
+$("#reload").onclick=load;
+let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(KIDS.length)render()},200)});
+syncRange();load();
+</script>
+</body>
+</html>
