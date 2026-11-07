@@ -235,14 +235,14 @@ function render(){
     (p.data.tricky||[]).forEach(k=>{const n=lessonOfKey(k);if(!n)return;const id=ch+"-"+n;(prog[id]=prog[id]||{seen:0,tricky:0}).tricky++})});
   const lastDay={};[...DAYS.values()].forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{if((v.s>0||v.q>0||v.cards>0)&&(!lastDay[id]||D.date>lastDay[id]))lastDay[id]=D.date}));
   const lsTot={};inRange.forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{const t=lsTot[id]||(lsTot[id]={s:0,v:0,vKnown:false,q:0,c:0,cards:0,days:0});
-    t.s+=v.s;t.q+=v.q;t.c+=v.c;t.cards+=v.cards;if(v.v!=null){t.v+=v.v;t.vKnown=true}if(v.s>0||v.q>0||v.cards>0)t.days++}));
+    t.s+=v.s;t.q+=v.q;t.c+=v.c;t.cards+=v.cards;if(v.v!=null){t.v+=v.v;t.vKnown=true}else if(v.s>0)t.vGap=true;if(v.s>0||v.q>0||v.cards>0)t.days++}));
   const lessonIds=order.filter(id=>lessonInfo(id).total||lsTot[id]||prog[id]);
   h+=`<section class="panel"><h2>按课看（最近 ${range} 天 · 词语进度为目前累计）</h2><div class="tbl-wrap"><table class="lt">
     <thead><tr><th>课文</th><th>练习时间</th><th>天数</th><th>题数</th><th>正确率</th><th>闪卡</th><th>练过</th><th>易错</th></tr></thead><tbody>
     ${lessonIds.map(id=>{const I=lessonInfo(id),t=lsTot[id],p=prog[id]||{seen:0,tricky:0};
       const ld=lastDay[id]?`最近一次：${+lastDay[id].slice(5,7)}月${+lastDay[id].slice(8)}日`:"";
       return `<tr><td><div class="lname"><span class="dot" style="background:${lessonColor(id)}"></span><span>${I.label}${I.title?`<br><span class="small">${esc(I.title)}</span>`:""}${ld?`<br><span class="small">${ld}</span>`:""}</span></div></td>
-      <td data-l="练习时间">${t&&t.s?fmt(t.s):"–"}${t&&t.vKnown&&t.v?`<br><span class="small">在屏幕上 ${fmt(t.v)}</span>`:""}</td>
+      <td data-l="练习时间">${t&&t.s?fmt(t.s):"–"}${t&&t.vKnown&&!t.vGap&&t.v?`<br><span class="small">在屏幕上 ${fmt(t.v)}</span>`:""}</td>
       <td data-l="天数">${t&&t.days?t.days:"–"}</td><td data-l="题数">${t&&t.q?t.q:"–"}</td><td data-l="正确率">${t?pct(t.c,t.q):"–"}</td><td data-l="闪卡">${t&&t.cards?t.cards:"–"}</td>
       <td data-l="练过">${p.seen}${I.total?`/${I.total}<div class="prog"><i style="width:${Math.min(100,Math.round(p.seen/I.total*100))}%"></i></div>`:""}</td>
       <td data-l="易错">${p.tricky||"–"}</td></tr>`}).join("")}
