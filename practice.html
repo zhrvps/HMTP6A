@@ -660,9 +660,9 @@ function renderF(){
   $("#card").onclick=()=>{F.flip=!F.flip;renderF()};
   $("#prev").onclick=()=>{F.k=(F.k-1+F.items.length)%F.items.length;F.flip=false;renderF()};
   $("#shuf").onclick=()=>{F.items=shuffle(F.items);F.k=0;F.flip=false;renderF()};
-  if(F.flip){$("#know").onclick=()=>adv();$("#learning").onclick=()=>{loadL();tricky.add(e.key);saveL();adv()}}
+  if(F.flip){$("#know").onclick=()=>adv();$("#learning").onclick=()=>{loadL();tricky.add(e.key);saveL();adv(true)}}
   else $("#flip").onclick=()=>{F.flip=true;renderF()}}
-function adv(){track.card(F.items[F.k]&&F.items[F.k].lesson);fillSets();F.k=(F.k+1)%F.items.length;F.flip=false;renderF()}
+function adv(unk){track.card(F.items[F.k]&&F.items[F.k].lesson,!!unk);fillSets();F.k=(F.k+1)%F.items.length;F.flip=false;renderF()}
 
 /* ---------- word list ---------- */
 const stripTone=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g,"").toLowerCase();
@@ -694,11 +694,13 @@ const loadU=()=>{try{const x=JSON.parse(localStorage.getItem(UKEY)||"null");if(x
 /* 每次修改前重新读取，两个标签页同时打开也会相加，不会互相覆盖 */
 const day=(k=today())=>{loadU();return U.days[k]||(U.days[k]={questions:0,correct:0,cards:0,quizzes:0,seconds:0,missed:[]})};
 const saveU=()=>{try{localStorage.setItem(UKEY,JSON.stringify(U))}catch(e){}};
+/* 按练习方式计数：词义 m:、多音字 p:、字辨 z:；闪卡 learn（n 张，unk = 点“还不熟”） */
+const MD=(o,m,z)=>{const x=o.md||(o.md={});return x[m]||(x[m]=z)};
 const keyLabel=k=>{const w=W.find(e=>k.endsWith(e.key)||k==="z:"+e.key);if(k.startsWith("p:")){const q=PQ.find(x=>x.key===k);return q?q.ch+"("+q.ans+")":k}return w?w.word:k};
 let DB=null,dirty=false,writing=false,REMOTE=null,remoteState="loading";
 const track={
-  q(ok,k,n){const d=day();d.questions++;if(n){const l=LD(d,n);l.q++;if(ok)l.c++}if(ok)d.correct++;else{const lab=keyLabel(k);if(!d.missed.includes(lab)){d.missed.push(lab);if(d.missed.length>60)d.missed.shift()}}saveU();dirty=true;scheduleSave()},
-  card(n){const d=day();d.cards++;if(n)LD(d,n).cards++;saveU();dirty=true;scheduleSave()},
+  q(ok,k,n){const d=day();d.questions++;const md=String(k).startsWith("p:")?"poly":String(k).startsWith("z:")?"zb":"quiz";{const m=MD(d,md,{q:0,c:0});m.q++;if(ok)m.c++}if(n){const l=LD(d,n);l.q++;if(ok)l.c++;const m=MD(l,md,{q:0,c:0});m.q++;if(ok)m.c++}if(ok)d.correct++;else{const lab=keyLabel(k);if(!d.missed.includes(lab)){d.missed.push(lab);if(d.missed.length>60)d.missed.shift()}}saveU();dirty=true;scheduleSave()},
+  card(n,unk){const d=day();d.cards++;{const m=MD(d,"learn",{n:0,unk:0});m.n++;if(unk)m.unk++}if(n){const l=LD(d,n);l.cards++;const m=MD(l,"learn",{n:0,unk:0});m.n++;if(unk)m.unk++}saveU();dirty=true;scheduleSave()},
   quiz(){day().quizzes++;saveU();dirty=true;flush()}};
 /* 时间：页面在屏幕上、并且在限定时间内有点击/滑动/按键，才算练习时间（active）；
    页面在屏幕上的时间另记（vis）。都用时间戳计算，浏览器定时器变慢也不会少算。每次练习记成一个 session。 */
@@ -734,7 +736,7 @@ function saveNote(){const el=document.getElementById("saveNote");if(!el)return;
     :saveState==="ready"?(HOSTED?`正在练习：${LEARNER}，进度会保存在网上。`:"已登录：进度会保存到你的账号。")
     :`保存失败（${saveErr}）。进度先留在这台设备上，15 秒后会自动重试。`}
 function scheduleSave(){if(!DB)return;clearTimeout(saveTimer);saveTimer=setTimeout(flush,1000)}
-const writeDay=(k,d)=>DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,vis:d.vis||0,sess:(d.sess||[]).map(({a,b,act,vis})=>({a,b,act,vis})),tabs:d.tabs||{},ls:d.ls||{},missed:(d.missed||[]).slice(-60),updatedAt:new Date().toISOString()});
+const writeDay=(k,d)=>DB.doc("usage/"+k+"_"+DEV).set({date:k,device:DEV,chapter:CHNUM,questions:d.questions,correct:d.correct,cards:d.cards,quizzes:d.quizzes,seconds:d.seconds,vis:d.vis||0,sess:(d.sess||[]).map(({a,b,act,vis})=>({a,b,act,vis})),tabs:d.tabs||{},ls:d.ls||{},md:d.md||{},missed:(d.missed||[]).slice(-60),updatedAt:new Date().toISOString()});
 const unsentDays=()=>{loadU();const t=today(),lim=new Date(Date.now()-7*864e5).toISOString().slice(0,10);return Object.keys(U.days).filter(k=>k<t&&k>=lim&&!(U.synced&&U.synced[k]))};
 async function flush(){
   if(!DB)return;
