@@ -168,12 +168,12 @@ function buildDays(){
     if(!DAYS.has(d.date))DAYS.set(d.date,{date:d.date,seconds:0,vis:null,questions:0,correct:0,cards:0,quizzes:0,ls:{},hasLs:false,tabs:null,missed:new Set(),sess:[],hasSess:false,devices:new Set()});
     const D=DAYS.get(d.date);D.devices.add(d.device||r.key);
     D.seconds+=num(d.seconds);D.questions+=num(d.questions);D.correct+=num(d.correct);D.cards+=num(d.cards);D.quizzes+=num(d.quizzes);
-    if(d.vis!=null)D.vis=(D.vis||0)+num(d.vis);
-    if(d.ls&&typeof d.ls==="object"){D.hasLs=true;Object.entries(d.ls).forEach(([n,v])=>{const id=(r.chapter||d.chapter||601)+"-"+n;
-      const L=D.ls[id]||(D.ls[id]={s:0,v:null,q:0,c:0,cards:0});L.s+=num(v.s);L.q+=num(v.q);L.c+=num(v.c);L.cards+=num(v.cards);if(v.v!=null)L.v=(L.v||0)+num(v.v)})}
+    const visOk=d.vis!=null&&num(d.vis)>0&&num(d.vis)>=num(d.seconds)-1;if(visOk)D.vis=(D.vis||0)+num(d.vis);else if(num(d.seconds)>0)D.visGap=true;
+    if(d.ls&&typeof d.ls==="object"&&Object.keys(d.ls).length){D.hasLs=true;Object.entries(d.ls).forEach(([n,v])=>{const id=(r.chapter||d.chapter||601)+"-"+n;
+      const L=D.ls[id]||(D.ls[id]={s:0,v:null,q:0,c:0,cards:0});L.s+=num(v.s);L.q+=num(v.q);L.c+=num(v.c);L.cards+=num(v.cards);if(v.v!=null&&num(v.v)>0)L.v=(L.v||0)+num(v.v)})}
     if(d.tabs&&typeof d.tabs==="object"){D.tabs=D.tabs||{};Object.entries(d.tabs).forEach(([k,v])=>D.tabs[k]=(D.tabs[k]||0)+num(v))}
     (d.missed||[]).forEach(w=>D.missed.add(String(w)));
-    if(Array.isArray(d.sess)){D.hasSess=true;d.sess.forEach(s=>{if(s&&s.a)D.sess.push({a:num(s.a),b:num(s.b)||num(s.a),act:num(s.act),vis:num(s.vis)})})}
+    if(Array.isArray(d.sess)&&d.sess.length){D.hasSess=true;d.sess.forEach(s=>{if(s&&s.a)D.sess.push({a:num(s.a),b:num(s.b)||num(s.a),act:num(s.act),vis:num(s.vis)})})}
   });
   // Learner rows: latest updated_at across all spellings (and chapters, one per chapter).
   const latest={};
@@ -264,7 +264,7 @@ function dayHTML(D,open){
   let b="";
   // Sessions
   if(D.hasSess&&D.sess.length){b+=`<div><h3>练习时间段</h3><ul class="sess">${mergeSess(D.sess).map(s=>`<li>${hm(s.a)}–${hm(s.b)} · ${fmt(s.act)}练习 / ${fmt(s.vis)}在屏幕上</li>`).join("")}</ul></div>`}
-  else b+=`<div><h3>练习时间段</h3><p class="note">${D.hasSess?"没有记录到练习时间段。":"这天没有时间段记录（11 月 5 日起才有）。"}</p></div>`;
+  else b+=`<div><h3>练习时间段</h3><p class="note">${D.date<"2026-11-05"?"这天没有时间段记录（11 月 5 日起才有）。":"这天没有记录到练习时间段。"}</p></div>`;
   // Lessons
   const ids=Object.keys(D.ls).filter(id=>{const v=D.ls[id];return v.s>0||v.q>0||v.cards>0}).sort((a,b)=>{const [ac,an]=a.split("-").map(Number),[bc,bn]=b.split("-").map(Number);return ac-bc||an-bn});
   const rows=ids.map(id=>{const v=D.ls[id],I=lessonInfo(id);
@@ -274,7 +274,7 @@ function dayHTML(D,open){
   if(rows.length)b+=`<div><h3>按课</h3><div class="tbl-wrap"><table><thead><tr><th>课文</th><th>练习时间</th><th>题数</th><th>正确率</th><th>闪卡</th></tr></thead><tbody>${rows.join("")}</tbody></table></div></div>`;
   // Missed
   b+=`<div><h3>答错的词${D.missed.size?`（${D.missed.size}）`:""}</h3>${D.missed.size?`<div class="miss">${[...D.missed].map(w=>`<span>${esc(w)}</span>`).join("")}</div>`:`<p class="note">${D.questions?"没有答错的词。":"这天没有答题。"}</p>`}</div>`;
-  const vis=D.vis!=null?` · 在屏幕上 ${fmt(D.vis)}`:"";
+  const vis=D.vis!=null&&!D.visGap?` · 在屏幕上 ${fmt(D.vis)}`:"";
   return `<details class="day"${open?" open":""}><summary><span class="dname">${dayLabel(D.date)}</span><span class="chev">▶</span>
     <span class="dsum">练习 ${fmt(D.seconds)}${vis} · ${D.questions} 题 · 答对 ${pct(D.correct,D.questions)} · 闪卡 ${D.cards} 张${D.quizzes?` · 做完 ${D.quizzes} 轮`:""}${D.devices.size>1?` · ${D.devices.size} 台设备`:""}</span></summary>
     <div class="dbody">${b}</div></details>`;
