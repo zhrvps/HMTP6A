@@ -531,7 +531,7 @@ function buildRound(){
   const add=list=>{for(const x of list){if(pick.length>=ROUND)break;if(!pick.includes(x))pick.push(x)}};
   if(trk.length>MIX_AT)add(trk.slice(0,MIX_TRICKY));
   add(fresh);add(trk);add(all.filter(x=>L.seen[x.key]&&!tricky.has(x.key)).sort((a,b)=>lastAsked(a.key)-lastAsked(b.key)));
-  const nNew=pick.filter(x=>!L.seen[x.key]).length,nTricky=pick.filter(x=>tricky.has(x.key)).length;
+  const nTricky=pick.filter(x=>tricky.has(x.key)).length,nNew=pick.filter(x=>!tricky.has(x.key)&&!L.seen[x.key]).length; /* 互不重叠：易错优先，其次新题，其余是复习 */
   return{items:shuffle(pick),mix:{nNew,nTricky,nReview:pick.length-nNew-nTricky}}}
 
 function fillSets(){
