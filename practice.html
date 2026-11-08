@@ -153,7 +153,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
 
 <div class="wrap">
   <header class="head">
-    <div class="chbox" aria-label="欢乐伙伴 6A">6A</div>
+    <div class="chbox" id="chbox" aria-label="欢乐伙伴 6A">6A</div>
     <div style="flex:1;min-width:0"><h1 id="title">欢乐伙伴 6A 词语</h1><p id="sub"></p><p class="who" id="who" hidden></p></div>
     <button class="btn ghost" id="m-progress" data-mode="progress" style="flex:none">记录</button>
   </header>
@@ -181,7 +181,7 @@ footer{font-size:13px;color:var(--muted);text-align:center}
 <script>
 // Each lesson: title, passages (name, last word number in that passage), words, names (pinyin only).
 // Word format: 词|拼音|释义|English|搭配|字辨|例句
-const LESSONS = [
+const LESSONS_6A = [
 {n:1,t:"加油！加油！",parts:[["生活看板《校园访谈》",10],["核心《石缝里的小花》",28]],w:[
 "克服|kè fú|用坚强的意志和力量战胜（困难、缺点等）。|Overcome|克服困难 / 克服缺点 / 克服恐惧|（克）服 / （刻）苦|只要有决心，我们一定能克服学习上的困难。",
 "锻炼|duàn liàn|通过体育运动使身体强壮；也指在实践中使能力提高。|Exercise; train|锻炼身体 / 体育锻炼 / 锻炼意志|锻（炼）/ （练）习；（锻）炼 / （段）落|爸爸每天早上都到公园跑步，锻炼身体。",
@@ -399,7 +399,7 @@ const LESSONS = [
 ];
 
 // 多音字: 课|词|字|另一个读音（多个用 /）|释义|English|搭配|字辨|例句（{ }标出该字；多个读音的句子用 ／ 分开，顺序同读音）
-const POLY = [
+const POLY_6A = [
 "1|要求|要|yào|需要；重要；将要。|Want; need; will|需要 / 重要 / 要是 / 快要|yāo（要求）≠ yào（需要、重要）|天快{要}下雨了，出门记得带伞。",
 "1|抱佛脚|佛|fú|用于“仿佛”，好像的意思。|As if; seemingly|仿佛 / 仿佛看见 / 仿佛回到了过去|fó（佛教、抱佛脚）≠ fú（仿佛）|海水把我托了起来，仿{佛}托着一片树叶。",
 "1|石缝|缝|féng|用针线把东西连起来。|Sew|缝衣服 / 缝扣子 / 缝补|fèng（石缝、门缝）≠ féng（缝衣服）|奶奶戴上老花镜，帮我{缝}好了掉下的扣子。",
@@ -453,12 +453,139 @@ const POLY = [
 ];
 </script>
 <script>
+/* ===== 欢乐伙伴 5A（第一至三课；照片在家长电脑 HMT/P5A/）===== */
+const LESSONS_5A = [
+{n:1,t:"到户外去",parts:[["生活看板《五年级露营活动安排》", 15], ["核心《露营记》", 33]],w:[
+"露营|lù yíng|在野外过夜，睡在营帐里。|Camp|举办露营 / 露营活动 / 参加露营|（露）营 / 道（路）；露（营）/ （萤）火虫 / 大（荧）幕。读音：lù（露营）≠ lòu（露出笑容）|我非常怀念去年的小四露营。",
+"安排|ān pái|有条理、分先后地处理（事物）。|Arrange|安排工作 / 安排活动 / 活动安排|安（排）/ （非）常 / （悲）伤|老师已经把每位同学的任务都安排好了。",
+"集合|jí hé|聚集在一起。|Assemble; gather|集合地点 / 集合时间 / 紧急集合|（集）合 / （售）货员 / （焦）急|体育老师吩咐班长带领我们到操场集合。",
+"欢迎会|huān yíng huì|迎接来人的聚会。|Welcome party|举办欢迎会 / 新生欢迎会 / 参加欢迎会|欢（迎）会 / （仰）头|开学第一天，我们为新生举办欢迎会。",
+"野外|yě wài|离城市较远的地方。|The outdoors; the wild|野外探险 / 野外活动 / 野外生活|（野）外 / 别（墅）|周末，爸爸带我们到野外去观察小鸟。",
+"探险|tàn xiǎn|到从来没有人去过或很少人去过的地方去考察。|Explore; adventure|野外探险 / 探险队 / 上山探险|（探）险 / （深）海|探险队不怕危险，登上火山口探险。",
+"营火会|yíng huǒ huì|一种露天晚会，大家围着火堆谈话、唱歌、跳舞。|Campfire party|参加营火会 / 营火会上 / 举办营火会|（营）火会 / （宫）殿|在营火会上，大家席地而坐，又说又笑，欣赏着精彩的节目。",
+"攀岩|pān yán|手脚并用，攀登岩壁的运动。|Rock climbing|攀岩比赛 / 室内攀岩 / 攀岩大比拼|（攀）岩 / 打（拳）；攀（岩）/ 河（岸）|第二天上午，我们在营地进行了攀岩大比拼。",
+"营地|yíng dì|露营的人住宿和活动的地方。|Campsite|打扫营地 / 回到营地 / 露营营地|营（地）/ （他）们 / （池）塘|一到营地，我们就进行了几项有趣的活动。",
+"袜子|wà zi|穿在脚上的纺织品。|Socks|一双袜子 / 穿袜子 / 洗袜子|（袜）子 / 周（末）/ （抹）布|露营要多带一双袜子，弄湿了就可以换。",
+"手电筒|shǒu diàn tǒng|用电池发光的小型照明工具。|Flashlight; torch|打开手电筒 / 一支手电筒 / 带上手电筒|手电（筒）/ 相（同）/ （铜）钱|晚上去营火会，记得带上手电筒。",
+"防止|fáng zhǐ|预先想办法，不让坏事发生。|Prevent|防止意外 / 防止生病 / 防止受伤|（防）止 / （访）问 / （仿）佛；防（止）/ （正）在 / （上）学|为了防止意外，露营期间不可单独行动。",
+"单独|dān dú|不跟别的人在一起；独自。|Alone; on one's own|单独行动 / 单独一人 / 单独完成|单（独）/ （浊）水 / （烛）光|这份作业要你们单独完成，不可以抄别人的。",
+"禁止|jìn zhǐ|不许可。|Forbid; prohibit|禁止带贵重物品 / 禁止吸烟 / 禁止入内|（禁）止 / 清（楚）|露营期间，禁止带贵重物品。",
+"贵重|guì zhòng|价值高；值得重视。|Valuable; precious|贵重物品 / 贵重的礼物 / 十分贵重|（贵）重 / （遗）忘 / （费）用|贵重物品不要带去露营，以免弄丢。",
+"竞赛|jìng sài|互相比赛，争取胜利。|Contest; competition|“两人三脚”竞赛 / 数学竞赛 / 参加竞赛|（竞）赛 / （竟）然 / （境）界|其中一项是“两人三脚”竞赛。",
+"绑|bǎng|用绳子、带子等缠绕或捆扎。|Tie; bind|绑在一起 / 绑得结结实实 / 绑鞋带|（绑）/ （帮）忙 / 国（邦）|竞赛的规则是：两人一组，一个人的右脚和另一个人的左脚绑在一起。",
+"冠军|guàn jūn|比赛中的第一名。|Champion|获得冠军 / 冠军队 / 世界冠军|（冠）军 / （完）成 / （元）旦。读音：guàn（冠军）≠ guān（鸡冠）|先到终点的那一组就是冠军。",
+"结实|jiē shi|牢固；坚固耐用。|Sturdy; firm|绑得结结实实 / 结实的绳子 / 身体结实|（结）实 / （洁）白 / （吉）祥|我和同伴把脚绑得结结实实的。",
+"摔|shuāi|身体失去平衡而倒下。|Fall; tumble|摔倒 / 摔了一跤 / 摔了个四脚朝天|（摔）倒 / （率）领|可是，刚一抬腿，就摔了个四脚朝天。",
+"齐心协力|qí xīn xié lì|大家同心，一起努力。|Work together as one|齐心协力完成 / 全班齐心协力 / 齐心协力搬桌子|齐心（协）力 / （办）法|这比赛看起来简单，但要做到齐心协力，还真不容易啊！",
+"配合|pèi hé|分工合作，一起完成一件事。|Cooperate; coordinate|互相配合 / 配合得很好 / 一定配合|（配）合 / 日（记）|大家互相配合，很快就把帐篷搭好了。",
+"轮到|lún dào|按照次序，到了某人。|Be one's turn|轮到我 / 终于轮到 / 轮到谁|（轮）到 / 讨（论）|有些同学动作太慢，轮到我时，已经是晚餐时间了。",
+"擦|cā|用布、毛巾等抹，使干净。|Wipe|擦了擦脸 / 擦桌子 / 擦干|（擦）脸 / 观（察）|我来不及冲凉，只好擦了擦脸，就跑去吃饭。",
+"狼吞虎咽|láng tūn hǔ yàn|形容吃东西又猛又急。|Wolf down (food)|狼吞虎咽地吃 / 吃得狼吞虎咽|（狼）吞虎咽 / 新（娘）/ （粮）食；狼吞虎（咽）/ （因）为 / （烟）花。读音：yàn（咽下去）≠ yān（咽喉）|我打开饭盒，不管三七二十一，狼吞虎咽地吃了起来。",
+"顿|dùn|量词，用于吃饭、打骂等的次数。|(measure word for meals)|这顿饭 / 一顿饭 / 骂了一顿|这（顿）饭 / （顷）刻 / （烦）恼|这顿饭，虽然没有妈妈做的红烧排骨，但我吃得真香啊！",
+"排骨|pái gǔ|猪、牛、羊等的肋骨，带着肉。|Spare ribs|红烧排骨 / 排骨汤 / 一块排骨|排（骨）/ （滑）梯|妈妈做的红烧排骨又香又嫩。",
+"一望无际|yí wàng wú jì|一眼望不到边，形容非常辽阔。|Boundless; as far as the eye can see|一望无际的大海 / 一望无际的草原|一望无（际）/ （标）准 / （示）范|吃过晚餐，我们走到沙滩上。只见大海一望无际。",
+"夕阳|xī yáng|傍晚的太阳。|Setting sun|夕阳西下 / 夕阳的余晖 / 被夕阳染红|（夕）阳 / （多）少|黄昏时，夕阳慢慢地落到海里去了。",
+"染|rǎn|用颜料使东西着色；也指沾上颜色。|Dye; tinge|染成金黄 / 染色 / 染红|（染）色 / 复（杂）|海面被夕阳染成了一片金黄。",
+"椰树|yē shù|热带常绿乔木，果实叫椰子。|Coconut tree|高大的椰树 / 一棵椰树 / 椰树林|（椰）树 / 杨（柳）|高大的椰树在晚风中轻轻地摇摆。",
+"黄昏|huáng hūn|太阳落下去、天快黑的时候。|Dusk|黄昏时 / 每天黄昏 / 黄昏的海边|黄（昏）/ 结（婚）|黄昏时的海边，景色真迷人啊！",
+"感到|gǎn dào|心里有某种感觉。|Feel|感到充实 / 感到高兴 / 感到很累|（感）到 / （咸）菜 / （减）少|这两天，我虽然很累，但是却感到非常充实。"
+],names:[]},
+{n:2,t:"身体会说话",parts:[["生活看板《小测试：预防近视知多少》", 13], ["核心《给小主人的一封信》", 29]],w:[
+"测试|cè shì|用一定的方法考查知识或能力。|Test; quiz|小测试 / 参加测试 / 能力测试|（测）试 / （侧）面 / （厕）所|小测试：预防近视知多少。",
+"正确|zhèng què|符合事实、道理或标准。|Correct|正确的答案 / 正确的做法 / 完全正确|正（确）/ （角）度 / （硬）币|读下面的问题，选出正确的答案。",
+"答案|dá àn|问题的解答。|Answer|正确的答案 / 找答案 / 标准答案|答（案）/ （安）全 / （按）时|你答对了吗？答案就在这一课中，找一找吧。",
+"代表|dài biǎo|用一个人或事物表示某种意思；替别人做事或说话。|Represent; stand for|代表答案 / 代表全班 / 学生代表|（代）表 / 口（袋）/ 砍（伐）|班长代表全班同学向老师献花。",
+"号码|hào mǎ|表示事物次序或作为标志的数目字。|Number|电话号码 / 号码牌 / 填写号码|号（码）/ （吗）/ （妈）妈|请把你的电话号码写在表格上。",
+"填写|tián xiě|在表格等空白的地方写上应写的文字或数字。|Fill in|填写表格 / 填写号码 / 认真填写|（填）写 / （真）的 / 谨（慎）|把正确答案的号码填写在格子里。",
+"格子|gé zi|划成的方形空框。|Square; box (on a form)|填在格子里 / 方格子 / 格子衬衫|（格）子 / 客（人）|请把答案写在格子里，一个格子写一个字。",
+"昏暗|hūn àn|光线不足，暗。|Dim; dark|昏暗的角落 / 灯光昏暗 / 天色昏暗|（昏）暗 / 结（婚）；昏（暗）/ （音）乐 / （晴）天|昏暗的角落里不适合看书。",
+"电脑|diàn nǎo|电子计算机。|Computer|使用电脑 / 电脑游戏 / 平板电脑|电（脑）/ 烦（恼）|使用电脑或手机时，正确的做法是什么？",
+"屏幕|píng mù|电视机、电脑等显示图像的平面。|Screen|看着屏幕 / 电脑屏幕 / 手机屏幕|屏（幕）/ （墓）地 / 羡（慕）|眼睛长时间地看着屏幕，对视力不好。",
+"保持|bǎo chí|使某种状态长久不变。|Keep; maintain|保持距离 / 保持安静 / 保持干净|保（持）/ （特）别 / （等）待|眼睛和屏幕要保持一定的距离。",
+"距离|jù lí|两地之间的长度；相隔。|Distance|保持距离 / 一段距离 / 距离很远|（距）离 / （拒）绝 / （巨）大|我家距离学校只有五分钟的路程。",
+"户外|hù wài|房屋的外面；野外。|Outdoors|户外活动 / 参加户外活动 / 户外运动|（户）外 / （护）士 / 火（炉）|经常参加户外活动，对眼睛有好处。",
+"而且|ér qiě|表示更进一层。|And also; moreover|不但……而且…… / 而且还|而（且）/ （目）光 / 工（具）|你不但坐得直直的，而且还让我跟书本保持一定的距离。",
+"每隔|měi gé|表示相同的时间或距离重复一次。|Every (interval)|每隔半小时 / 每隔一天 / 每隔几米|每（隔）/ 打（嗝）/ （融）化|用电脑时，每隔半小时你就会休息一会儿。",
+"放松|fàng sōng|使精神、肌肉等由紧张变为不紧张。|Relax|放松放松 / 放松心情 / 放松一下|放（松）/ （公）园 / 树（枝）|你还经常参加户外活动，让我也放松放松。",
+"惨|cǎn|处境或遭遇非常不好，令人难过。|Miserable; terrible|惨了 / 悲惨 / 惨叫|（惨）/ （参）加|可是，自从你迷上了电脑游戏，我就惨了。",
+"盯|dīng|把视线集中在一点上，看着不放。|Stare at|盯着屏幕 / 紧紧盯着 / 盯住|（盯）着 / （钉）子 / （叮）咬|你整晚坐在电脑前，目不转睛地盯着屏幕。",
+"睡眠|shuì mián|睡觉的状态。|Sleep|睡眠不足 / 充足的睡眠 / 睡眠时间|睡（眠）/ （民）族|因为睡眠不足，你整天无精打采。",
+"头疼|tóu téng|头部疼痛。|Headache|经常头疼 / 头疼脑热 / 让人头疼|头（疼）/ （冬）天 / （病）人|你身体也变差了，经常感冒、头疼。",
+"咳嗽|ké sou|喉咙受刺激，发出声音把气排出来。|Cough|咳嗽了一声 / 经常咳嗽 / 止咳|（咳）嗽 / （孩）子 / （刻）苦；咳（嗽）/ （漱）口|他感冒了，咳嗽得很厉害。",
+"诊所|zhěn suǒ|个人或几个医生开的规模较小的医疗机构。|Clinic|去诊所 / 诊所的常客 / 牙科诊所|（诊）所 / （珍）珠|你经常感冒、头疼、咳嗽，成了诊所的“常客”。",
+"眼圈|yǎn quān|眼睛的周围。|Area around the eyes|眼圈发黑 / 黑眼圈 / 眼圈红了|眼（圈）/ 试（卷）/ （拳）头|他昨晚没睡好，今天眼圈都黑了。",
+"下降|xià jiàng|从高处往低处移动；减少。|Drop; decline|视力下降 / 成绩下降 / 温度下降|下（降）/ （隆）重|我不但眼圈发黑，而且视力也下降了。",
+"模糊|mó hu|不分明，不清楚。|Blurry; vague|看东西越来越模糊 / 模糊不清 / 字迹模糊|模（糊）/ （湖）水 / （蝴）蝶|雾太大了，远处的房子看起来很模糊。",
+"瞎|xiā|眼睛看不见东西。|Blind|变瞎 / 瞎子 / 瞎说|（瞎）/ （害）怕|看东西越来越模糊，我真担心有一天会变瞎啊！",
+"抛|pāo|扔；丢下。|Throw; cast aside|抛到脑后 / 抛球 / 抛弃|（抛）/ （抱）着 / （泡）泡|可是，一坐到电脑前，你就把这一切抛到了脑后。",
+"伤害|shāng hài|使身体或感情受到损害。|Hurt; harm|伤害眼睛 / 不要伤害 / 受到伤害|伤（害）/ 收（割）/ （宫）殿|我请求你，不要再伤害我了，好吗？",
+"习惯|xí guàn|长期养成、不容易改变的行为。|Habit|坏习惯 / 好习惯 / 改掉坏习惯|习（惯）/ 一（贯）/ 可（惜）|为了我们的明天，赶快改掉坏习惯吧！"
+],names:[]},
+{n:3,t:"懂事的你",parts:[["生活看板《“阳光小熊”营养早餐》", 12], ["核心《可贵的沉默》", 30]],w:[
+"材料|cái liào|可以直接制成成品的东西；做饭用的原料。|Ingredients; materials|准备材料 / 建筑材料 / 材料清单|（材）料 / （村）子 / 人（才）|做“阳光小熊”营养早餐，要先准备好材料。",
+"紫菜|zǐ cài|一种海藻，晒干后可以吃，呈紫黑色。|Seaweed (nori)|一片紫菜 / 紫菜汤 / 剪紫菜|（紫）菜 / （此）外 / （柴）火|把准备好的黄瓜和紫菜摆在炒蛋上。",
+"黄瓜|huáng guā|一种蔬菜，果实长条形，绿色。|Cucumber|一根黄瓜 / 黄瓜去皮 / 切黄瓜|（黄）瓜 / （横）线|黄瓜去皮，从中间切出三片。",
+"调味料|tiáo wèi liào|做菜时用来调和味道的东西，如盐、糖、胡椒粉。|Seasoning|加入调味料 / 各种调味料|（调）味料 / （绸）子 / （周）末。读音：tiáo（调味料）≠ diào（调查）|厨房里有盐、糖、胡椒粉等各种调味料。",
+"盐|yán|有咸味的调味品。|Salt|一点盐 / 加盐 / 海盐|（盐）/ （监）督 / （蓝）色|炒鸡蛋时，加一点盐就很香了。",
+"胡椒粉|hú jiāo fěn|胡椒的果实磨成的粉，味道辛辣。|Ground pepper|撒胡椒粉 / 一点胡椒粉|胡（椒）粉 / （叔）叔|这碗汤加了一点胡椒粉，味道更香了。",
+"步骤|bù zhòu|事情进行的顺序。|Steps; procedure|做法步骤 / 按步骤 / 第一个步骤|步（骤）/ （聚）会|做菜要按照步骤，一步一步来。",
+"剪|jiǎn|用剪刀使东西断开。|Cut (with scissors)|剪成 / 剪纸 / 剪头发|（剪）/ （前）面 / 弓（箭）|妈妈用剪刀帮我剪头发。",
+"形状|xíng zhuàng|物体的样子。|Shape|图中的形状 / 各种形状 / 形状像|形（状）/ （壮）观 / 服（装）|把紫菜剪成图中的形状。",
+"搅拌|jiǎo bàn|用棍子等在混合物中转动、和弄。|Stir; mix|搅拌均匀 / 不停地搅拌 / 搅拌鸡蛋|（搅）拌 / （觉）得；搅（拌）/ 同（伴）/ （半）天|在碗里打两个鸡蛋，加入调味料后搅拌。",
+"锅|guō|烧煮食物的器具。|Pot; wok|在锅里放油 / 一口锅 / 炒锅|（锅）/ 闯（祸）/ （蜗）牛|开小火，在锅里放油。",
+"炒|chǎo|把食物放在锅里翻动使熟。|Stir-fry|炒熟 / 炒鸡蛋 / 炒菜|（炒）/ （吵）架 / （沙）子 / （抄）写|把鸡蛋倒进锅里，炒熟，关火。",
+"沉默|chén mò|不说话。|Silent; silence|低头沉默 / 沉默了一分钟 / 保持沉默|（沉）默 / 情（况）；沉（默）/ （黑）色 / （墨）水|沉默了足足一分钟，老师轻轻地咳嗽了一声。",
+"异口同声|yì kǒu tóng shēng|不同的人说出相同的话，形容意见一致。|In unison|异口同声地回答 / 大家异口同声|（异）口同声 / （导）游 / （弄）脏|“知道！”我们异口同声地回答。",
+"庆祝|qìng zhù|为共同的喜事进行活动表示高兴或纪念。|Celebrate|庆祝生日 / 庆祝节日 / 举行庆祝|庆（祝）/ （视）力|“给你们庆祝吗？”“当然啊！”",
+"左顾右盼|zuǒ gù yòu pàn|向左右两边看。|Look left and right|神气十足地左顾右盼 / 左顾右盼地找人|左顾右（盼）/ （扮）演 / （分）开|我们都举起了手，有的还神气十足地左顾右盼。",
+"聚会|jù huì|人们会合在一起。|Gathering; party|生日聚会 / 同学聚会 / 参加聚会|（聚）会 / （取）得|接着，我们开始谈论生日聚会、生日礼物、长辈的祝福……",
+"祝福|zhù fú|祝人平安、幸福。|Blessing; good wishes|长辈的祝福 / 送上祝福 / 真诚的祝福|祝（福）/ 财（富）/ 一（幅）画|父母过生日的时候，要记得送上你们的祝福。",
+"兴奋|xīng fèn|非常高兴，精神振奋。|Excited|越来越兴奋 / 十分兴奋 / 兴奋地跳起来|兴（奋）/ 准（备）|大家越来越兴奋，声音越来越响亮，教室里也越来越热闹。",
+"鸦雀无声|yā què wú shēng|连乌鸦和麻雀的声音都没有，形容非常安静。|Dead silence|教室里鸦雀无声 / 一下子鸦雀无声|（鸦）雀无声 / 小（鸭）；鸦（雀）无声 / 节（省）|举着的手放了下来，教室里鸦雀无声。",
+"犯|fàn|做了违反规则或法律的事。|Commit (an error/crime)|犯错误 / 犯规 / 犯了错|（犯）/ 模（范）/ （狂）风|我们都低头沉默着，好像犯了错误似的。",
+"错误|cuò wù|不正确的事情、行为；不正确。|Mistake|犯错误 / 改正错误 / 错误的答案|错（误）/ （娱）乐|知道自己犯了错误，就要马上改正。",
+"似的|shì de|用在词语后面，表示跟某种情况相像。|As if; like|好像……似的 / 犯了错误似的|（似）的 / （以）后。读音：shì（似的）≠ sì（好似、相似）|胡姬花在风中轻轻地摇摆，好像在向我打招呼似的。",
+"身份证|shēn fèn zhèng|证明一个人身份的证件。|Identity card|看身份证 / 带上身份证|身（份）证 / （分）开 / （纷）纷|“看爸爸妈妈的身份证。”",
+"语重心长|yǔ zhòng xīn cháng|话说得诚恳，情意深长。|Earnest and well-meaning|语重心长地说 / 语重心长的话|（语）重心长 / 觉（悟）|老师语重心长地说：“父母养育你们不容易。”",
+"贺卡|hè kǎ|祝贺用的卡片。|Greeting card|生日贺卡 / 做贺卡 / 送贺卡|（贺）卡 / 书（架）/ （加）油|我们会做生日贺卡送给爸爸妈妈。",
+"烦恼|fán nǎo|烦闷苦恼。|Worried; troubled|烦恼的事 / 感到烦恼 / 不要烦恼|烦（恼）/ 电（脑）|我们会在爸爸妈妈烦恼时安慰他们。",
+"安慰|ān wèi|使心情安适。|Comfort|安慰他们 / 安慰朋友 / 得到安慰|安（慰）/ （蔚）蓝|小明比赛输了，我们都去安慰他。",
+"爱惜|ài xī|因重视而不糟蹋。|Cherish; take good care of|爱惜身体 / 爱惜粮食 / 爱惜书本|爱（惜）/ （借）书 / （错）误|我们会叫爸爸妈妈爱惜身体，别太劳累。",
+"劳累|láo lèi|因过度劳动而感到疲乏。|Tired; overworked|别太劳累 / 劳累了一天 / 十分劳累|（劳）累 / 光（荣）；劳（累）/ （紧）张 / 朴（素）。读音：lèi（劳累）≠ lěi（积累）|爸爸妈妈劳累了一天，回到家里还要做家务。"
+],names:[]}
+];
+/* 5A 多音字：只能加在最后（编号 p:L<课号>:<序号> 用的是这里的位置） */
+const POLY_5A = [
+"1|露营|露|lòu|显露出来（口语）。|Show; reveal|露出笑容 / 露面 / 露一手|lù（露营、露水）≠ lòu（露出、露面）|听到这个好消息，弟弟{露}出了笑容。",
+"1|结实|结|jié|用线、绳等打结；结束；联合。|Tie a knot; finish; unite|打结 / 团结 / 结束|jiē（结实）≠ jié（团结、结束）|我们要团{结}起来，互相帮助。",
+"1|冠军|冠|guān|帽子；鸟头顶上的肉块。|Crown; comb (of a bird)|鸡冠 / 衣冠|guàn（冠军）≠ guān（鸡冠）|大公鸡头上有一个红红的鸡{冠}。",
+"1|狼吞虎咽|咽|yān|咽喉，喉咙。|Throat|咽喉 / 咽炎|yàn（狼吞虎咽、咽下去）≠ yān（咽喉）|他感冒了，{咽}喉又红又痛。",
+"1|禁止|禁|jīn|忍住；承受得住。|Bear; refrain from|不禁 / 禁不住 / 弱不禁风|jìn（禁止）≠ jīn（不禁、禁不住）|听到这个笑话，大家都不{禁}笑了起来。",
+"2|号码|号|háo|大声叫；大声哭。|Howl; wail|呼号 / 号叫|hào（号码）≠ háo（呼号、号叫）|狂风呼{号}，大树都被吹弯了。",
+"2|眼圈|圈|juàn|养猪、羊等家畜的地方。|Pen (for livestock)|猪圈 / 羊圈|quān（眼圈、圆圈）≠ juàn（猪圈）|农夫把小猪赶回了猪{圈}。",
+"2|下降|降|xiáng|投降；使驯服。|Surrender; subdue|投降 / 降服|jiàng（下降）≠ xiáng（投降）|敌人终于投{降}了。",
+"2|模糊|模|mú|模子；样子。|Mould; appearance|模样 / 模子 / 一模一样|mó（模糊、模仿）≠ mú（模样、一模一样）|这对双胞胎长得一{模}一样。",
+"3|调味料|调|diào|调动；调查；腔调。|Transfer; investigate; tune|调查 / 调动 / 音调|tiáo（调味料、调皮）≠ diào（调查、音调）|老师要我们{调}查同学们最喜欢的水果。",
+"3|似的|似|sì|像；如同。|Similar; like|相似 / 好似 / 似乎|shì（似的）≠ sì（相似、似乎）|这两幅画看起来很相{似}。",
+"3|劳累|累|lěi|积累；连续。|Accumulate|积累 / 日积月累 / 累计|lèi（劳累）≠ lěi（积累）|多读书可以积{累}很多知识。",
+"3|兴奋|兴|xìng|对事物喜爱的情绪。|Interest; mood|高兴 / 兴趣 / 兴致|xīng（兴奋）≠ xìng（高兴、兴趣）|我对画画很感{兴}趣。"
+];
+/* 课本：网址 ?b=5A / ?b=6A，没有就用上次选的（localStorage hmt-book），默认 6A。
+   章节号和本地存储键各册分开：6A = 601 / p6cn，5A = 501 / p5cn。 */
+const BOOKS={"6A":{ch:601,key:"p6cn",lessons:LESSONS_6A,poly:POLY_6A,range:"第一至七课"},
+             "5A":{ch:501,key:"p5cn",lessons:LESSONS_5A,poly:POLY_5A,range:"第一至三课"}};
+let BOOK="6A";
+try{const q=new URLSearchParams(location.search).get("b");const saved=localStorage.getItem("hmt-book");
+  BOOK=BOOKS[q]?q:(BOOKS[saved]?saved:"6A");localStorage.setItem("hmt-book",BOOK)}catch(e){}
+const LESSONS=BOOKS[BOOK].lessons, POLY=BOOKS[BOOK].poly;
+</script>
+<script>
 (function(){
-const KEY="p6cn";
+const KEY=BOOKS[BOOK].key;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-const CN="一二三四五六七";
+const CN="一二三四五六七八九";
 
 /* ---------- build data ---------- */
 const W=[];
@@ -517,7 +644,7 @@ W.forEach(e=>{const used=new Set();
     ZQ.push({key:"z:"+e.key+(used.size>1?"/"+target:""),lesson:e.lesson,e,ans:target,opts:[target,...others.slice(0,3)],m})})});
 
 /* ---------- hosted mode: Supabase storage when not inside Claude ---------- */
-const CHNUM=601;
+const CHNUM=BOOKS[BOOK].ch;
 const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
 const HOSTED=!(window.claude&&window.claude.use);
 let LEARNER="";try{LEARNER=localStorage.getItem("vocab-learner")||""}catch(e){}
@@ -560,7 +687,7 @@ function record(k,ok){loadL();const s=L.seen[k]||(L.seen[k]={n:0,ok:0,streak:0,l
 
 let mode="learn",setSel="L1";
 try{const m=localStorage.getItem(KEY+"-mode");if(m)mode=m;const ss=localStorage.getItem(KEY+"-set");if(ss)setSel=ss}catch(e){}
-const HM=(location.hash||"").match(/^#L([1-7])$/);if(HM){setSel="L"+HM[1];mode="learn"}else if(location.hash==="#all")setSel="round";
+const HM=(location.hash||"").match(/^#L([1-9])$/);if(HM){setSel="L"+HM[1];mode="learn"}else if(location.hash==="#all")setSel="round";
 const lessonOf=()=>/^L\d$/.test(setSel)?+setSel.slice(1):0;
 const POOLS={quiz:()=>W.map(e=>({key:e.key,lesson:e.lesson,e})),poly:()=>PQ,zb:()=>ZQ,learn:()=>W.map(e=>({key:e.key,lesson:e.lesson,e})),list:()=>W.map(e=>({key:e.key,lesson:e.lesson,e}))};
 const MODE_NAME={quiz:"词义",poly:"多音字",zb:"字辨",learn:"闪卡",list:"词语表"};
@@ -866,9 +993,12 @@ document.addEventListener("keydown",ev=>{
   else if(Q.answered&&ev.key==="Enter"&&document.activeElement?.id!=="next"){ev.preventDefault();next()}});
 
 if(HOSTED){const w=$("#who");w.hidden=false;w.innerHTML=(LEARNER?`正在练习：<b>${esc(LEARNER)}</b> · <button id="chg">换名字</button> · `:"")+`<a href="index.html">回到首页</a>`;const c=$("#chg");if(c)c.onclick=()=>{try{localStorage.removeItem("vocab-learner")}catch(e){}location.reload()}}
-$("#sub").textContent=`欢乐伙伴 6A · 第一至七课 · ${W.length} 个词语 · ${PQ.length} 道多音字题 · ${ZQ.length} 道字辨题`;
+{const other=BOOK==="6A"?"5A":"6A";document.title=`欢乐伙伴 ${BOOK} 词语`;$("#title").textContent=`欢乐伙伴 ${BOOK} 词语`;
+ const cb=$("#chbox");cb.textContent=BOOK;cb.setAttribute("aria-label","欢乐伙伴 "+BOOK);
+ if(HOSTED){const w=$("#who");w.insertAdjacentHTML("beforeend",` · <a href="?b=${other}">换到 ${other}</a>`)}}
+$("#sub").textContent=`欢乐伙伴 ${BOOK} · ${BOOKS[BOOK].range} · ${W.length} 个词语 · ${PQ.length} 道多音字题 · ${ZQ.length} 道字辨题`;
 $("#rule").innerHTML=`每个词语都有：<mark>拼音、释义、英文、搭配、字辨、例句</mark>。先选一课，按 ①→④ 的顺序练：先闪卡，再做题。选一课时一次做完这一课的全部题，选“全部课文”每轮 20 题；答错的会进入<b>易错题</b>，连续答对两次才移出。`;
-$("#foot").textContent="词语来自《欢乐伙伴》6A 第一至七课（标有拼音的词）。释义、搭配和例句为练习用，请以老师的笔记为准。";
+$("#foot").textContent=`词语来自《欢乐伙伴》${BOOK} ${BOOKS[BOOK].range}（标有拼音的词和生字表里的字）。`+"释义、搭配和例句为练习用，请以老师的笔记为准。";
 fillSets();go();
 })();
 </script>

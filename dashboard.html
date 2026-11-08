@@ -6,16 +6,16 @@
 <title>华文练习看板</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;700;900&display=swap">
 <style>
-/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 600–699). */
+/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 500–699: 5A = 501, 6A = 601). */
 :root{
   --paper:#F6F8FC; --surface:#FFFFFF; --ink:#18233A; --muted:#5B6782; --line:#D6DDEB;
   --blue:#2350C8; --blue-soft:#E3EAFB; --hl:#FFE066; --good:#1E8A4C; --bad:#C23B3B;
-  --l1:#2350C8; --l2:#D9731A; --l3:#1E8A4C; --l4:#7B4BC4; --l5:#0F8C9B; --l6:#C2416B; --l7:#8C7A12; --l0:#A9B3C7;
+  --l1:#2350C8; --l2:#D9731A; --l3:#1E8A4C; --l4:#7B4BC4; --l5:#0F8C9B; --l6:#C2416B; --l7:#8C7A12; --l8:#5E6B2E; --l9:#9A4F1F; --l0:#A9B3C7;
   --display:"Baloo 2","Noto Sans SC","PingFang SC",system-ui,sans-serif; --body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{--paper:#0F1626;--surface:#172238;--ink:#E8EDF7;--muted:#9AA6C0;--line:#2B3954;--blue:#7FA2FF;--blue-soft:#1F2D4D;--hl:#8A6F00;--good:#5BD08A;--bad:#FF8A80;
-  --l1:#7FA2FF;--l2:#F2A25C;--l3:#5BD08A;--l4:#B694F0;--l5:#4FC7D4;--l6:#F07FA2;--l7:#D2BE4E;--l0:#5A6784;color-scheme:dark}}
+  --l1:#7FA2FF;--l2:#F2A25C;--l3:#5BD08A;--l4:#B694F0;--l5:#4FC7D4;--l6:#F07FA2;--l7:#D2BE4E;--l8:#A9BC6B;--l9:#E08A5A;--l0:#5A6784;color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -91,7 +91,7 @@ details.day[open] .chev{transform:rotate(90deg)}
 <div class="wrap">
   <header>
     <h1>华文练习<mark>看板</mark></h1>
-    <p class="sub">欢乐伙伴 6A 词语练习 · 给家长看的每日记录 · <a href="index.html">回到练习首页</a></p>
+    <p class="sub">欢乐伙伴 5A / 6A 词语练习 · 给家长看的每日记录 · <a href="index.html">回到练习首页</a></p>
   </header>
   <div class="bar-top">
     <label>孩子：<select id="who"></select></label>
@@ -106,7 +106,9 @@ details.day[open] .chev{transform:rotate(90deg)}
 <script>
 const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
 // Books: chapter number → lessons. Keep in sync with index.html's LS when lessons change; 6B will be 602.
-const BOOKS={601:{name:"6A",lessons:[
+const BOOKS={501:{name:"5A",lessons:[
+  {n:1,t:"到户外去",total:80},{n:2,t:"身体会说话",total:68},{n:3,t:"懂事的你",total:72}]},
+  601:{name:"6A",lessons:[
   {n:1,t:"加油！加油！",total:76},{n:2,t:"祖孙情",total:73},{n:3,t:"美食小侦探",total:70},
   {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}]}};
 const CN="一二三四五六七八九十";
@@ -138,7 +140,7 @@ const dayLabel=s=>{const [y,m,d]=s.split("-").map(Number);const w=new Date(y,m-1
 const multiBook=()=>Object.keys(BOOKS).length>1;
 function lessonInfo(id){const [ch,n]=id.split("-").map(Number);const b=BOOKS[ch];const l=b&&b.lessons.find(x=>x.n===n);
   return {ch,n,title:l?l.t:"",total:l?l.total:0,label:(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+(CN[n-1]||n)+"课"}}
-const lessonColor=id=>{const n=+id.split("-")[1];return n>=1&&n<=7?`var(--l${n})`:"var(--l0)"};
+const lessonColor=id=>{const n=+id.split("-")[1];return n>=1&&n<=9?`var(--l${n})`:"var(--l0)"};
 
 let ROWS=[], KIDS=[], DAYS=new Map(), PROG=null, sel="", range=14;
 try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||"{}");sel=v.who||"";range=[7,14,30].includes(v.range)?v.range:14}catch(e){}
@@ -148,7 +150,7 @@ async function fetchAll(){
   const rows=[];
   for(let off=0;;off+=1000){
     const r=await fetch(`${SUPA.url}/rest/v1/hmt_progress?select=learner,chapter,kind,key,data,updated_at`
-      +`&chapter=gte.600&chapter=lt.700&order=learner,chapter,kind,key&offset=${off}&limit=1000`,{headers:{apikey:SUPA.key}});
+      +`&chapter=gte.500&chapter=lt.700&order=learner,chapter,kind,key&offset=${off}&limit=1000`,{headers:{apikey:SUPA.key}});
     if(!r.ok){let m="";try{const j=await r.json();m=j.message||""}catch(e){}throw new Error("error "+r.status+(m?"："+m:""))}
     const page=await r.json();rows.push(...page);
     if(page.length<1000)break;

@@ -40,6 +40,7 @@ h1 mark{background:linear-gradient(transparent 55%,var(--hl) 55%);color:inherit}
 form{display:flex;gap:10px;flex-wrap:wrap}
 input{flex:1 1 200px;background:var(--surface);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:18px}
 .btn{border:0;border-radius:12px;padding:12px 20px;font:700 18px/1 var(--body);background:var(--blue);color:var(--surface);cursor:pointer}
+.books{display:flex;gap:8px;margin-top:10px}.books button{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 16px;font:700 17px/1.2 var(--body);cursor:pointer}.books button[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:var(--surface)}
 .card{background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 @media (max-width:480px){.ch{grid-template-columns:56px minmax(0,1fr)}.go{display:none}.num{width:50px;height:46px;font-size:20px}}
@@ -48,8 +49,9 @@ input{flex:1 1 200px;background:var(--surface);color:var(--ink);border:2px solid
 <body>
 <div class="wrap">
   <header>
-    <h1>欢乐伙伴 6A <mark>词语</mark>练习</h1>
-    <p class="sub">第一至七课 · 词义、多音字、字辨和闪卡</p>
+    <h1>欢乐伙伴 <span id="bk">6A</span> <mark>词语</mark>练习</h1>
+    <p class="sub"><span id="rg">第一至七课</span> · 词义、多音字、字辨和闪卡</p>
+    <div class="books" id="books" role="tablist" aria-label="选择课本"></div>
   </header>
   <div id="who" class="who"></div>
   <div id="main"></div>
@@ -59,12 +61,20 @@ input{flex:1 1 200px;background:var(--surface);color:var(--ink);border:2px solid
 </div>
 <script>
 const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
-const CHNUM=601, PAGE="practice.html";
-const CN="一二三四五六七";
-const LS=[
+const CN="一二三四五六七八九";
+/* 每册：章节号、课文和每课题数（total = 词义 + 多音字 + 字辨），和 dashboard.html 的 BOOKS 要同步 */
+const BOOKS={
+  "5A":{ch:501,range:"第一至三课",LS:[{n:1,t:"到户外去",total:80},{n:2,t:"身体会说话",total:68},{n:3,t:"懂事的你",total:72}]},
+  "6A":{ch:601,range:"第一至七课",LS:[
   {n:1,t:"加油！加油！",total:76},{n:2,t:"祖孙情",total:73},{n:3,t:"美食小侦探",total:70},
-  {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}];
-const ALL=LS.reduce((a,l)=>a+l.total,0);
+  {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}]}};
+let BOOK="6A";try{const q=new URLSearchParams(location.search).get("b"),sv=localStorage.getItem("hmt-book");BOOK=BOOKS[q]?q:(BOOKS[sv]?sv:"6A")}catch(e){}
+let CHNUM,LS,ALL,PAGE;
+function setBook(b){BOOK=b;try{localStorage.setItem("hmt-book",b)}catch(e){}
+  CHNUM=BOOKS[b].ch;LS=BOOKS[b].LS;ALL=LS.reduce((a,l)=>a+l.total,0);PAGE="practice.html?b="+b;
+  document.title="欢乐伙伴 "+b+" 词语练习";document.getElementById("bk").textContent=b;document.getElementById("rg").textContent=BOOKS[b].range;
+  document.getElementById("books").innerHTML=Object.keys(BOOKS).map(k=>`<button role="tab" aria-selected="${k===b}" data-b="${k}">${k}</button>`).join("");}
+setBook(BOOK);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cleanName=s=>String(s||"").trim().replace(/[^A-Za-z0-9 _-]/g,"").slice(0,30);
@@ -98,6 +108,7 @@ async function load(){
     $("#note").textContent=rows.length?"进度保存在网上，所有设备的练习会加在一起。":"还没有保存的练习。选一课开始吧！";
   }catch(e){$("#note").className="note err";$("#note").textContent="现在读不到进度（"+e.message+"）。还是可以练习，网络恢复后会自动保存。"}
 }
+document.getElementById("books").onclick=e=>{const t=e.target.closest("button");if(!t||t.dataset.b===BOOK)return;setBook(t.dataset.b);if(LEARNER)load()};
 function start(){
   if(!LEARNER){
     $("#who").textContent="";
