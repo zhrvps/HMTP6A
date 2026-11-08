@@ -6,7 +6,7 @@
 <title>华文练习看板</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;700;900&display=swap">
 <style>
-/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 500–699: 5A = 501, 6A = 601). */
+/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 500–699: 5A = 501, 5B = 502, 6A = 601). */
 :root{
   --paper:#F6F8FC; --surface:#FFFFFF; --ink:#18233A; --muted:#5B6782; --line:#D6DDEB;
   --blue:#2350C8; --blue-soft:#E3EAFB; --hl:#FFE066; --good:#1E8A4C; --bad:#C23B3B;
@@ -108,10 +108,11 @@ const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_H
 // Books: chapter number → lessons. Keep in sync with index.html's LS when lessons change; 6B will be 602.
 const BOOKS={501:{name:"5A",lessons:[
   {n:1,t:"到户外去",total:80},{n:2,t:"身体会说话",total:68},{n:3,t:"懂事的你",total:72},{n:4,t:"分享是快乐的",total:80},{n:5,t:"我闯祸了",total:62},{n:6,t:"我的东西找到了",total:63},{n:7,t:"一千桶水",total:69},{n:8,t:"和时间赛跑",total:59},{n:9,t:"很久很久以前",total:57}]},
+  502:{name:"5B",lessons:[{n:10,t:"成长的烦恼",total:82},{n:11,t:"同学之间",total:71},{n:12,t:"新加坡，我为你骄傲",total:75},{n:13,t:"汉字王国",total:66},{n:14,t:"老师，谢谢您",total:86},{n:15,t:"想当一棵树",total:65},{n:16,t:"语言的力量",total:70},{n:17,t:"世界那么大",total:67}]},
   601:{name:"6A",lessons:[
   {n:1,t:"加油！加油！",total:76},{n:2,t:"祖孙情",total:73},{n:3,t:"美食小侦探",total:70},
   {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}]}};
-const CN="一二三四五六七八九十";
+const CNUM=n=>{const d="一二三四五六七八九";return n<10?d[n-1]:n===10?"十":n<20?"十"+d[n-11]:String(n)};
 const VIEW_KEY="p6cn-dash-view";
 // md = {learn:{n,unk}, quiz:{q,c}, poly:{q,c}, zb:{q,c}}
 const addMd=(a,b)=>{a=a||{};Object.entries(b||{}).forEach(([k,o])=>{const t=a[k]||(a[k]={});Object.entries(o||{}).forEach(([f,v])=>t[f]=(t[f]||0)+num(v))});return a};
@@ -125,7 +126,7 @@ const MODE_TH="<th>闪卡</th><th>词义</th><th>多音字</th><th>字辨</th><t
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const lessonOfKey=k=>{const m=String(k).match(/^(?:m:|z:m:|p:m:|p:L)(\d)/);return m?+m[1]:0};
+const lessonOfKey=k=>{const m=String(k).match(/^(?:m:|z:m:|p:m:|p:L)(\d+)/);return m?+m[1]:0};
 const num=v=>typeof v==="number"&&isFinite(v)?v:(+v||0);
 const pad=n=>String(n).padStart(2,"0");
 const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
@@ -139,8 +140,8 @@ const dayLabel=s=>{const [y,m,d]=s.split("-").map(Number);const w=new Date(y,m-1
 // Lesson ids are "<chapter>-<lesson>" so 6B can be added without clashing.
 const multiBook=()=>Object.keys(BOOKS).length>1;
 function lessonInfo(id){const [ch,n]=id.split("-").map(Number);const b=BOOKS[ch];const l=b&&b.lessons.find(x=>x.n===n);
-  return {ch,n,title:l?l.t:"",total:l?l.total:0,label:(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+(CN[n-1]||n)+"课"}}
-const lessonColor=id=>{const n=+id.split("-")[1];return n>=1&&n<=9?`var(--l${n})`:"var(--l0)"};
+  return {ch,n,title:l?l.t:"",total:l?l.total:0,label:(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+CNUM(n)+"课"}}
+const lessonColor=id=>{const n=+id.split("-")[1];return n>=1?`var(--l${(n-1)%9+1})`:"var(--l0)"};
 
 let ROWS=[], KIDS=[], DAYS=new Map(), PROG=null, sel="", range=14;
 try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||"{}");sel=v.who||"";range=[7,14,30].includes(v.range)?v.range:14}catch(e){}

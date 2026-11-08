@@ -61,10 +61,11 @@ input{flex:1 1 200px;background:var(--surface);color:var(--ink);border:2px solid
 </div>
 <script>
 const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_HTl05cHUNd1LJ_-ai8GaAw_oXjk-NCT"};
-const CN="一二三四五六七八九";
+const CNUM=n=>{const d="一二三四五六七八九";return n<10?d[n-1]:n===10?"十":n<20?"十"+d[n-11]:String(n)};
 /* 每册：章节号、课文和每课题数（total = 词义 + 多音字 + 字辨），和 dashboard.html 的 BOOKS 要同步 */
 const BOOKS={
   "5A":{ch:501,range:"第一至九课",LS:[{n:1,t:"到户外去",total:80},{n:2,t:"身体会说话",total:68},{n:3,t:"懂事的你",total:72},{n:4,t:"分享是快乐的",total:80},{n:5,t:"我闯祸了",total:62},{n:6,t:"我的东西找到了",total:63},{n:7,t:"一千桶水",total:69},{n:8,t:"和时间赛跑",total:59},{n:9,t:"很久很久以前",total:57}]},
+  "5B":{ch:502,range:"第十至十七课",LS:[{n:10,t:"成长的烦恼",total:82},{n:11,t:"同学之间",total:71},{n:12,t:"新加坡，我为你骄傲",total:75},{n:13,t:"汉字王国",total:66},{n:14,t:"老师，谢谢您",total:86},{n:15,t:"想当一棵树",total:65},{n:16,t:"语言的力量",total:70},{n:17,t:"世界那么大",total:67}]},
   "6A":{ch:601,range:"第一至七课",LS:[
   {n:1,t:"加油！加油！",total:76},{n:2,t:"祖孙情",total:73},{n:3,t:"美食小侦探",total:70},
   {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}]}};
@@ -78,7 +79,7 @@ setBook(BOOK);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cleanName=s=>String(s||"").trim().replace(/[^A-Za-z0-9 _-]/g,"").slice(0,30);
-const lessonOfKey=k=>{const m=String(k).match(/^(?:m:|z:m:|p:m:|p:L)(\d)/);return m?+m[1]:0};
+const lessonOfKey=k=>{const m=String(k).match(/^(?:m:|z:m:|p:m:|p:L)(\d+)/);return m?+m[1]:0};
 let LEARNER="";try{LEARNER=localStorage.getItem("vocab-learner")||""}catch(e){}
 const fmt=s=>{s=Math.round(s||0);if(s<60)return s?s+" 秒":"0 分钟";const m=Math.round(s/60);return m<60?m+" 分钟":Math.floor(m/60)+" 小时 "+(m%60)+" 分钟"};
 
@@ -88,7 +89,7 @@ function render(st){
   `<ul class="list" style="margin-top:${tot?12:0}px">${LS.map(l=>{const s=st&&st.per[l.n];
     const seen=s?s.seen:0,pct=Math.round(seen/l.total*100);
     const line=s?`练过 ${seen}/${l.total} 题 · 易错 ${s.tricky}`:`${l.total} 题（词义、多音字、字辨）`;
-    return `<li><a class="ch" href="${PAGE}#L${l.n}"><span class="num">${l.n}</span><span><span class="name">第${CN[l.n-1]}课《${esc(l.t)}》</span><br><span class="meta">${line}</span></span><span class="go">去练习 →</span>${s?`<span class="bar"><i style="width:${pct}%"></i></span>`:""}</a></li>`}).join("")}
+    return `<li><a class="ch" href="${PAGE}#L${l.n}"><span class="num">${l.n}</span><span><span class="name">第${CNUM(l.n)}课《${esc(l.t)}》</span><br><span class="meta">${line}</span></span><span class="go">去练习 →</span>${s?`<span class="bar"><i style="width:${pct}%"></i></span>`:""}</a></li>`}).join("")}
     <li><a class="ch" href="${PAGE}#all"><span class="num">全</span><span><span class="name">全部课文一起练</span><br><span class="meta">适合考试前复习</span></span><span class="go">去练习 →</span></a></li></ul>`;
 }
 async function load(){
