@@ -84,7 +84,7 @@ function render(st){
 async function load(){
   render(null);$("#note").className="note";$("#note").textContent="正在读取进度……";
   try{
-    const r=await fetch(`${SUPA.url}/rest/v1/vocab_progress?learner=eq.${encodeURIComponent(LEARNER)}&chapter=eq.${CHNUM}&select=kind,data`,{headers:{apikey:SUPA.key}});
+    const r=await fetch(`${SUPA.url}/rest/v1/hmt_progress?learner=eq.${encodeURIComponent(LEARNER)}&chapter=eq.${CHNUM}&select=kind,data`,{headers:{apikey:SUPA.key}});
     if(!r.ok)throw new Error("error "+r.status);
     const rows=await r.json();
     const st={total:{seconds:0,questions:0,correct:0,seen:0,tricky:0},per:{}};

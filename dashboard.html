@@ -6,7 +6,7 @@
 <title>华文练习看板</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;700;900&display=swap">
 <style>
-/* Parent dashboard for the Chinese practice site. Read-only view of vocab_progress (chapters 600–699). */
+/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 600–699). */
 :root{
   --paper:#F6F8FC; --surface:#FFFFFF; --ink:#18233A; --muted:#5B6782; --line:#D6DDEB;
   --blue:#2350C8; --blue-soft:#E3EAFB; --hl:#FFE066; --good:#1E8A4C; --bad:#C23B3B;
@@ -147,7 +147,7 @@ function saveView(){try{localStorage.setItem(VIEW_KEY,JSON.stringify({who:sel,ra
 async function fetchAll(){
   const rows=[];
   for(let off=0;;off+=1000){
-    const r=await fetch(`${SUPA.url}/rest/v1/vocab_progress?select=learner,chapter,kind,key,data,updated_at`
+    const r=await fetch(`${SUPA.url}/rest/v1/hmt_progress?select=learner,chapter,kind,key,data,updated_at`
       +`&chapter=gte.600&chapter=lt.700&order=learner,chapter,kind,key&offset=${off}&limit=1000`,{headers:{apikey:SUPA.key}});
     if(!r.ok){let m="";try{const j=await r.json();m=j.message||""}catch(e){}throw new Error("error "+r.status+(m?"："+m:""))}
     const page=await r.json();rows.push(...page);
