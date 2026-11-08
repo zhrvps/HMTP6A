@@ -71,6 +71,15 @@ details.day{background:var(--surface);border:2px solid var(--line);border-radius
 details.day[open]{border-color:var(--blue)}
 details.day summary{list-style:none;cursor:pointer;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline}
 details.day summary::-webkit-details-marker{display:none}
+details.lsec>summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:baseline;justify-content:space-between}
+details.lsec>summary::-webkit-details-marker{display:none}
+details.lsec>summary h2{margin:0}
+details.lsec[open]>summary{margin-bottom:10px}
+details.lsec .chev{display:inline-block}details.lsec[open]>summary .chev{transform:rotate(90deg)}
+details.lsec .tog{flex:none;color:var(--blue);font-size:14px;white-space:nowrap}
+details.lsec .tog::after{content:" 展开"}details.lsec[open] .tog::after{content:" 收起"}
+.seg button[aria-pressed="true"] .small{color:inherit;opacity:.85}
+.lsbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:8px;font-size:14px;color:var(--muted)}
 .dname{font:700 17px/1.3 var(--body)}
 .dsum{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;grid-column:1/-1}
 .chev{color:var(--blue);font-size:14px}
@@ -143,9 +152,9 @@ function lessonInfo(id){const [ch,n]=id.split("-").map(Number);const b=BOOKS[ch]
   return {ch,n,title:l?l.t:"",total:l?l.total:0,label:(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+CNUM(n)+"课"}}
 const lessonColor=id=>{const n=+id.split("-")[1];return n>=1?`var(--l${(n-1)%9+1})`:"var(--l0)"};
 
-let ROWS=[], KIDS=[], DAYS=new Map(), PROG=null, sel="", range=14;
-try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||"{}");sel=v.who||"";range=[7,14,30].includes(v.range)?v.range:14}catch(e){}
-function saveView(){try{localStorage.setItem(VIEW_KEY,JSON.stringify({who:sel,range}))}catch(e){}}
+let ROWS=[], KIDS=[], DAYS=new Map(), PROG=null, sel="", range=14, lsBook=0, lsOpen=true;
+try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||"{}");sel=v.who||"";range=[7,14,30].includes(v.range)?v.range:14;lsBook=BOOKS[v.lsBook]?+v.lsBook:0;lsOpen=v.lsOpen!==false}catch(e){}
+function saveView(){try{localStorage.setItem(VIEW_KEY,JSON.stringify({who:sel,range,lsBook,lsOpen}))}catch(e){}}
 
 async function fetchAll(){
   const rows=[];
@@ -249,8 +258,16 @@ function render(){
   const lastDay={};[...DAYS.values()].forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{if((v.s>0||v.q>0||v.cards>0)&&(!lastDay[id]||D.date>lastDay[id]))lastDay[id]=D.date}));
   const lsTot={};inRange.forEach(D=>Object.entries(D.ls).forEach(([id,v])=>{const t=lsTot[id]||(lsTot[id]={s:0,v:0,vKnown:false,q:0,c:0,cards:0,days:0});
     if(v.md)t.md=addMd(t.md,v.md);t.s+=v.s;t.q+=v.q;t.c+=v.c;t.cards+=v.cards;if(v.v!=null&&!v.vGap){t.v+=v.v;t.vKnown=true}else if(v.s>0)t.vGap=true;if(v.s>0||v.q>0||v.cards>0)t.days++}));
-  const lessonIds=order.filter(id=>lessonInfo(id).total||lsTot[id]||prog[id]);
-  h+=`<section class="panel"><h2>按课看（最近 ${range} 天 · 词语进度为目前累计）</h2><div class="tbl-wrap"><table class="lt">
+  const allIds=order.filter(id=>lessonInfo(id).total||lsTot[id]||prog[id]);
+  // 按课看 shows one book at a time; default = the book practised most recently.
+  let bk=lsBook;if(!BOOKS[bk]){const ids=Object.keys(lastDay).sort((a,b)=>lastDay[b].localeCompare(lastDay[a]));bk=ids.length?+ids[0].split("-")[0]:(BOOKS[601]?601:+Object.keys(BOOKS)[0])}
+  const hasData=id=>lsTot[id]||(prog[id]&&(prog[id].seen||prog[id].tricky));
+  const lessonIds=allIds.filter(id=>+id.split("-")[0]===bk);
+  const bookBtns=Object.keys(BOOKS).map(Number).concat(allIds.map(id=>+id.split("-")[0]).filter(c=>!BOOKS[c])).filter((c,i,a)=>a.indexOf(c)===i)
+    .map(c=>{const n=allIds.filter(id=>+id.split("-")[0]===c&&hasData(id)).length;return `<button type="button" data-ch="${c}" aria-pressed="${c===bk}">${BOOKS[c]?BOOKS[c].name:c}${n?` <span class="small">${n} 课</span>`:""}</button>`}).join("");
+  h+=`<details class="panel lsec" id="lssec"${lsOpen?" open":""}><summary><h2>按课看（最近 ${range} 天 · 词语进度为目前累计）</h2><span class="tog"><span class="chev">▶</span></span></summary>
+    <div class="lsbar"><span class="seg" id="lsbook" role="group" aria-label="课本">${bookBtns}</span><span>“x 课”= 这一册有练习记录的课数</span></div>
+    <div class="tbl-wrap"><table class="lt">
     <thead><tr><th>课文</th><th>练习时间</th><th>天数</th>${MODE_TH}<th>练过</th><th>易错</th></tr></thead><tbody>
     ${lessonIds.map(id=>{const I=lessonInfo(id),t=lsTot[id],p=prog[id]||{seen:0,tricky:0};
       const ld=lastDay[id]?`最近一次：${+lastDay[id].slice(5,7)}月${+lastDay[id].slice(8)}日`:"";
@@ -261,7 +278,7 @@ function render(){
       <td data-l="易错">${p.tricky||"–"}</td></tr>`}).join("")}
     </tbody></table></div>
     <p class="note" style="margin-top:8px">练过 = 词义、多音字、字辨里做过的题（闪卡不算）。易错 = 答错、闪卡点“还不熟”或在词语表点 ☆ 的题，连续答对 2 次后移出——所以可能出现“练过 0 · 易错 2”。按课的时间从 11 月 3 日晚开始记录，“在屏幕上”从 11 月 5 日开始。</p>`;
-  h+=`</section>`;
+  h+=`</details>`;
 
   // Daily detail, newest first.
   const shown=[...dates].reverse().filter(x=>DAYS.get(x));
@@ -308,6 +325,8 @@ async function load(){
 $("#who").onchange=e=>{sel=e.target.value;saveView();buildDays();render()};
 $("#range").onclick=e=>{const b=e.target.closest("button");if(!b)return;range=+b.dataset.d;saveView();syncRange();render()};
 $("#reload").onclick=load;
+$("#out").addEventListener("click",e=>{const b=e.target.closest("#lsbook button");if(!b)return;lsBook=+b.dataset.ch;saveView();render()});
+$("#out").addEventListener("toggle",e=>{if(e.target.id==="lssec"){lsOpen=e.target.open;saveView()}},true);
 let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(KIDS.length)render()},200)});
 syncRange();load();
 </script>
