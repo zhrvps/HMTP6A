@@ -505,7 +505,7 @@ function namePrompt(){
   $("#nameIn").focus();
 }
 /* ---------- learner state ---------- */
-const LKEY=KEY+"-learner"+(HOSTED&&LEARNER?"-"+LEARNER.toLowerCase():""),ROUND=10,MIX_AT=10,MIX_TRICKY=3,GRADUATE=2;
+const LKEY=KEY+"-learner"+(HOSTED&&LEARNER?"-"+LEARNER.toLowerCase():""),ROUND=10,ROUND_ALL=20,MIX_AT=10,MIX_TRICKY=3,GRADUATE=2;
 let L={seen:{},tricky:[],updatedAt:0};
 try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s&&s.seen)L=s}catch(e){}
 let tricky=new Set(L.tricky);let learnerDirty=false;
@@ -528,7 +528,8 @@ function modePool(){const all=POOLS[mode==="progress"?"quiz":mode]();const n=les
 function buildRound(){
   const all=modePool();const trk=all.filter(x=>tricky.has(x.key)).sort((a,b)=>lastAsked(a.key)-lastAsked(b.key));
   const fresh=shuffle(all.filter(x=>!L.seen[x.key]));const pick=[];
-  const add=list=>{for(const x of list){if(pick.length>=ROUND)break;if(!pick.includes(x))pick.push(x)}};
+  const size=lessonOf()?all.length:ROUND_ALL; /* 选了某一课：一次做完整课；全部课文：每轮 20 题；易错题仍是每轮 ROUND=10 */
+  const add=list=>{for(const x of list){if(pick.length>=size)break;if(!pick.includes(x))pick.push(x)}};
   if(trk.length>MIX_AT)add(trk.slice(0,MIX_TRICKY));
   add(fresh);add(trk);add(all.filter(x=>L.seen[x.key]&&!tricky.has(x.key)).sort((a,b)=>lastAsked(a.key)-lastAsked(b.key)));
   const nTricky=pick.filter(x=>tricky.has(x.key)).length,nNew=pick.filter(x=>!tricky.has(x.key)&&!L.seen[x.key]).length; /* 互不重叠：易错优先，其次新题，其余是复习 */
@@ -537,7 +538,7 @@ function buildRound(){
 function fillSets(){
   const sel=$("#set");const quizish=["quiz","poly","zb"].includes(mode);
   const pm=mode==="progress"?"quiz":mode;const all=POOLS[pm]();const tc=all.filter(x=>tricky.has(x.key)).length;
-  const opts=[[ "round",quizish?"全部课文：下一轮（10题）":`全部课文（${all.length}）`]];
+  const opts=[[ "round",quizish?"全部课文：下一轮（20题）":`全部课文（${all.length}）`]];
   LESSONS.forEach(l=>{const c=all.filter(x=>x.lesson===l.n).length;if(c)opts.push(["L"+l.n,`第${CN[l.n-1]}课《${l.t}》（${c}）`])});
   opts.push(["tricky",`我的易错题（${tc}）`]);
   sel.innerHTML=opts.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("");
@@ -824,7 +825,7 @@ document.addEventListener("keydown",ev=>{
 
 if(HOSTED){const w=$("#who");w.hidden=false;w.innerHTML=(LEARNER?`正在练习：<b>${esc(LEARNER)}</b> · <button id="chg">换名字</button> · `:"")+`<a href="index.html">回到首页</a>`;const c=$("#chg");if(c)c.onclick=()=>{try{localStorage.removeItem("vocab-learner")}catch(e){}location.reload()}}
 $("#sub").textContent=`欢乐伙伴 6A · 第一至七课 · ${W.length} 个词语 · ${PQ.length} 道多音字题 · ${ZQ.length} 道字辨题`;
-$("#rule").innerHTML=`每个词语都有：<mark>拼音、释义、英文、搭配、字辨、例句</mark>。先选一课，按 ①→④ 的顺序练：先闪卡，再做题。每轮 10 题；答错的会进入<b>易错题</b>，连续答对两次才移出。`;
+$("#rule").innerHTML=`每个词语都有：<mark>拼音、释义、英文、搭配、字辨、例句</mark>。先选一课，按 ①→④ 的顺序练：先闪卡，再做题。选一课时一次做完这一课的全部题，选“全部课文”每轮 20 题；答错的会进入<b>易错题</b>，连续答对两次才移出。`;
 $("#foot").textContent="词语来自《欢乐伙伴》6A 第一至七课（标有拼音的词）。释义、搭配和例句为练习用，请以老师的笔记为准。";
 fillSets();go();
 })();
