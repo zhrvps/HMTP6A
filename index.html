@@ -49,7 +49,7 @@ input{flex:1 1 200px;background:var(--surface);color:var(--ink);border:2px solid
 <body>
 <div class="wrap">
   <header>
-    <h1>欢乐伙伴 <span id="bk">6A</span> <mark>词语</mark>练习</h1>
+    <h1 id="h1">欢乐伙伴 <span id="bk">6A</span> <mark>词语</mark>练习</h1>
     <p class="sub"><span id="rg">第一至七课</span> · 词义、多音字、字辨和闪卡</p>
     <div class="books" id="books" role="tablist" aria-label="选择课本"></div>
   </header>
@@ -66,6 +66,7 @@ const CNUM=n=>{const d="一二三四五六七八九";return n<10?d[n-1]:n===10?"
 const BOOKS={
   "5A":{ch:501,range:"第一至九课",LS:[{n:1,t:"到户外去",total:80},{n:2,t:"身体会说话",total:68},{n:3,t:"懂事的你",total:72},{n:4,t:"分享是快乐的",total:80},{n:5,t:"我闯祸了",total:62},{n:6,t:"我的东西找到了",total:63},{n:7,t:"一千桶水",total:69},{n:8,t:"和时间赛跑",total:59},{n:9,t:"很久很久以前",total:57}]},
   "5B":{ch:502,range:"第十至十七课",LS:[{n:10,t:"成长的烦恼",total:82},{n:11,t:"同学之间",total:71},{n:12,t:"新加坡，我为你骄傲",total:75},{n:13,t:"汉字王国",total:66},{n:14,t:"老师，谢谢您",total:86},{n:15,t:"想当一棵树",total:65},{n:16,t:"语言的力量",total:70},{n:17,t:"世界那么大",total:67}]},
+  "GL":{ch:690,range:"第一批 50 个",gl:true,name:"关联词",LS:[{n:1,t:"递进关系",total:27},{n:2,t:"转折关系",total:40},{n:3,t:"条件关系",total:24},{n:4,t:"假设关系",total:16},{n:5,t:"因果关系",total:10},{n:6,t:"选择关系",total:23},{n:7,t:"并列关系",total:35},{n:8,t:"承接关系",total:22}]},
   "6A":{ch:601,range:"第一至七课",LS:[
   {n:1,t:"加油！加油！",total:76},{n:2,t:"祖孙情",total:73},{n:3,t:"美食小侦探",total:70},
   {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}]}};
@@ -73,8 +74,8 @@ let BOOK="6A";try{const q=new URLSearchParams(location.search).get("b"),sv=local
 let CHNUM,LS,ALL,PAGE;
 function setBook(b){BOOK=b;try{localStorage.setItem("hmt-book",b)}catch(e){}
   CHNUM=BOOKS[b].ch;LS=BOOKS[b].LS;ALL=LS.reduce((a,l)=>a+l.total,0);PAGE="practice.html?b="+b;
-  document.title="欢乐伙伴 "+b+" 词语练习";document.getElementById("bk").textContent=b;document.getElementById("rg").textContent=BOOKS[b].range;
-  document.getElementById("books").innerHTML=Object.keys(BOOKS).map(k=>`<button role="tab" aria-selected="${k===b}" data-b="${k}">${k}</button>`).join("");}
+  document.title=BOOKS[b].gl?"关联词练习":"欢乐伙伴 "+b+" 词语练习";document.getElementById("h1").innerHTML=BOOKS[b].gl?"<mark>关联词</mark>练习":`欢乐伙伴 <span id="bk">${b}</span> <mark>词语</mark>练习`;document.getElementById("rg").textContent=BOOKS[b].range;
+  document.getElementById("books").innerHTML=Object.keys(BOOKS).map(k=>`<button role="tab" aria-selected="${k===b}" data-b="${k}">${BOOKS[k].name||k}</button>`).join("");}
 setBook(BOOK);
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -88,8 +89,8 @@ function render(st){
   $("#main").innerHTML=(tot?`<div class="sum">一共练了 <b>${fmt(tot.seconds)}</b> · <b>${tot.questions}</b> 题${tot.questions?` · 答对 <b>${Math.round(tot.correct/tot.questions*100)}%</b>`:""} · 练过 <b>${tot.seen}</b>/${ALL} 题 · 易错 <b>${tot.tricky}</b></div>`:"")+
   `<ul class="list" style="margin-top:${tot?12:0}px">${LS.map(l=>{const s=st&&st.per[l.n];
     const seen=s?s.seen:0,pct=Math.round(seen/l.total*100);
-    const line=s?`练过 ${seen}/${l.total} 题 · 易错 ${s.tricky}`:`${l.total} 题（词义、多音字、字辨）`;
-    return `<li><a class="ch" href="${PAGE}#L${l.n}"><span class="num">${l.n}</span><span><span class="name">第${CNUM(l.n)}课《${esc(l.t)}》</span><br><span class="meta">${line}</span></span><span class="go">去练习 →</span>${s?`<span class="bar"><i style="width:${pct}%"></i></span>`:""}</a></li>`}).join("")}
+    const line=s?`练过 ${seen}/${l.total} 题 · 易错 ${s.tricky}`:`${l.total} 题${BOOKS[BOOK].gl?"":"（词义、多音字、字辨）"}`;
+    return `<li><a class="ch" href="${PAGE}#L${l.n}"><span class="num">${l.n}</span><span><span class="name">${BOOKS[BOOK].gl?esc(l.t):`第${CNUM(l.n)}课《${esc(l.t)}》`}</span><br><span class="meta">${line}</span></span><span class="go">去练习 →</span>${s?`<span class="bar"><i style="width:${pct}%"></i></span>`:""}</a></li>`}).join("")}
     <li><a class="ch" href="${PAGE}#all"><span class="num">全</span><span><span class="name">全部课文一起练</span><br><span class="meta">适合考试前复习</span></span><span class="go">去练习 →</span></a></li></ul>`;
 }
 async function load(){

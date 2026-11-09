@@ -6,7 +6,7 @@
 <title>华文练习看板</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;700;900&display=swap">
 <style>
-/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 500–699: 5A = 501, 5B = 502, 6A = 601). */
+/* Parent dashboard for the Chinese practice site. Read-only view of hmt_progress (Chinese-only table, chapters 500–699: 5A = 501, 5B = 502, 6A = 601, 关联词 = 690). */
 :root{
   --paper:#F6F8FC; --surface:#FFFFFF; --ink:#18233A; --muted:#5B6782; --line:#D6DDEB;
   --blue:#2350C8; --blue-soft:#E3EAFB; --hl:#FFE066; --good:#1E8A4C; --bad:#C23B3B;
@@ -118,6 +118,7 @@ const SUPA={url:"https://yezqrwjtwwhnuawmjeod.supabase.co",key:"sb_publishable_H
 const BOOKS={501:{name:"5A",lessons:[
   {n:1,t:"到户外去",total:80},{n:2,t:"身体会说话",total:68},{n:3,t:"懂事的你",total:72},{n:4,t:"分享是快乐的",total:80},{n:5,t:"我闯祸了",total:62},{n:6,t:"我的东西找到了",total:63},{n:7,t:"一千桶水",total:69},{n:8,t:"和时间赛跑",total:59},{n:9,t:"很久很久以前",total:57}]},
   502:{name:"5B",lessons:[{n:10,t:"成长的烦恼",total:82},{n:11,t:"同学之间",total:71},{n:12,t:"新加坡，我为你骄傲",total:75},{n:13,t:"汉字王国",total:66},{n:14,t:"老师，谢谢您",total:86},{n:15,t:"想当一棵树",total:65},{n:16,t:"语言的力量",total:70},{n:17,t:"世界那么大",total:67}]},
+  690:{name:"关联词",gl:true,lessons:[{n:1,t:"递进关系",total:27},{n:2,t:"转折关系",total:40},{n:3,t:"条件关系",total:24},{n:4,t:"假设关系",total:16},{n:5,t:"因果关系",total:10},{n:6,t:"选择关系",total:23},{n:7,t:"并列关系",total:35},{n:8,t:"承接关系",total:22}]},
   601:{name:"6A",lessons:[
   {n:1,t:"加油！加油！",total:76},{n:2,t:"祖孙情",total:73},{n:3,t:"美食小侦探",total:70},
   {n:4,t:"宝贵的礼物",total:66},{n:5,t:"小故事，大道理",total:80},{n:6,t:"精彩三国",total:86},{n:7,t:"世界走透透",total:76}]}};
@@ -149,7 +150,7 @@ const dayLabel=s=>{const [y,m,d]=s.split("-").map(Number);const w=new Date(y,m-1
 // Lesson ids are "<chapter>-<lesson>" so 6B can be added without clashing.
 const multiBook=()=>Object.keys(BOOKS).length>1;
 function lessonInfo(id){const [ch,n]=id.split("-").map(Number);const b=BOOKS[ch];const l=b&&b.lessons.find(x=>x.n===n);
-  return {ch,n,title:l?l.t:"",total:l?l.total:0,label:(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+CNUM(n)+"课"}}
+  return {ch,n,title:l&&!b.gl?l.t:"",total:l?l.total:0,label:b&&b.gl?b.name+" · "+(l?l.t:n):(multiBook()||!b?(b?b.name:ch)+" ":"")+"第"+CNUM(n)+"课"}}
 const lessonColor=id=>{const n=+id.split("-")[1];return n>=1?`var(--l${(n-1)%9+1})`:"var(--l0)"};
 
 let ROWS=[], KIDS=[], DAYS=new Map(), PROG=null, sel="", range=14, lsBook=0, lsOpen=true;
