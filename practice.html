@@ -83,6 +83,8 @@ select{max-width:100%}
 .fb h3{margin:0;font:900 21px/1.35 var(--body)}
 .fb.ok h3{color:var(--good)} .fb.no h3{color:var(--bad)}
 .fb p{margin:0}
+.wrongbox{border-top:2px dashed var(--bad);padding-top:8px;margin-top:2px;display:flex;flex-direction:column;gap:6px}
+.wrongch .big{font-size:22px;color:var(--bad);vertical-align:-2px}
 .en{color:var(--muted);font-size:15px}
 .tip{font-size:16px;color:var(--ink);border-top:1px dashed var(--line);padding-top:8px}
 .tip b{color:var(--blue)}
@@ -1138,7 +1140,21 @@ W.forEach(e=>{const used=new Set();
     const target=chars.find(c=>e.word.includes(c));if(!target||used.has(target))return;
     const others=[...new Set(chars.filter(c=>c!==target&&!e.word.includes(c)))];if(!others.length)return;
     const m=markAt(e.lj,e.word,target);if(!m)return;used.add(target);
-    ZQ.push({key:"z:"+e.key+(used.size>1?"/"+target:""),lesson:e.lesson,e,ans:target,opts:[target,...others.slice(0,3)],m})})});
+    ZQ.push({key:"z:"+e.key+(used.size>1?"/"+target:""),lesson:e.lesson,e,ans:target,opts:[target,...others.slice(0,3)],m,grp})})});
+/* 字辨答错时，说明选错的那个字怎么用：先看这组里它的词（如“土（豆）”），再在三册课文的词里找含这个字的词（优先完全同一个词，其次本册） */
+let ALLW=null;
+function wrongCharHTML(x,o){
+  const item=(x.grp||"").split(/\s*\/\s*/).find(t=>t.includes("（"+o+"）"));
+  const gw=item?item.replace(/[（）]/g,"").trim():"";
+  if(!ALLW){ALLW=[];Object.entries(BOOKS).forEach(([b,B])=>B.lessons.forEach(L=>L.w.forEach(r=>{const [word,py,def,en,,,lj]=r.split("|");ALLW.push({b,n:L.n,word,py,def,en,lj})})))}
+  const has=ALLW.filter(d=>d.word.includes(o)&&d.word!==x.e.word).sort((p,q)=>(p.b!==BOOK)-(q.b!==BOOK)||p.word.length-q.word.length);
+  const hit=(gw&&has.find(d=>d.word===gw&&d.b===BOOK))||(gw&&has.find(d=>d.word===gw))||has.find(d=>d.b===BOOK)||has[0];
+  let h=`<p class="wrongch"><span class="lbl">你选的</span><b class="big">${esc(o)}</b>`;
+  if(gw)h+=` 常用在“<b>${esc(gw)}</b>”${hit&&hit.word===gw?` <span class="py-inline">${esc(hit.py)}</span>`:""} 里`;
+  if(hit&&hit.word===gw)h+=`：${esc(hit.def)} <span class="en">(${esc(hit.en)})</span>`;
+  h+="。</p>";
+  if(hit)h+=(hit.word===gw?"":`<p class="wrongch">课本里的词：<b>${esc(hit.word)}</b> <span class="py-inline">${esc(hit.py)}</span>：${esc(hit.def)} <span class="en">(${esc(hit.en)})</span></p>`)+(hit.lj?`<p class="wrongch"><span class="lbl">例句</span>${esc(hit.lj)}</p>`:"");
+  return `<div class="wrongbox">${h}</div>`}
 
 /* ---------- hosted mode: Supabase storage when not inside Claude ---------- */
 const CHNUM=BOOKS[BOOK].ch;
@@ -1285,7 +1301,7 @@ function answer(o){
       <p><span class="lbl">字辨</span>${esc(x.zb)}</p>`;}
   else{const e=x.e;
     h3=ok?PRAISE[Math.floor(Math.random()*PRAISE.length)]:`不对哦，应该是“${esc(q.ans)}”。`;
-    inner=`<p class="sentence" style="font-size:19px">${wordHTML(e)}</p>${entryHTML(e,false)}`;}
+    inner=`<p class="sentence" style="font-size:19px">${wordHTML(e)}</p>${entryHTML(e,false)}`+(ok?"":wrongCharHTML(x,o));}
   $("#fb").innerHTML=`<div class="fb ${ok?"ok":"no"}"><h3>${h3}</h3>${inner}
     ${g?`<p class="tip"><b>很好！</b>连续答对两次，这题已经移出易错题。</p>`:ok&&was?`<p class="tip"><b>不错！</b>再答对一次，这题就会移出易错题。</p>`:!ok?`<p class="tip">这题已加入<b>易错题</b>，以后的练习还会出现。</p>`:""}</div>
     <div class="row" style="margin-top:12px"><button class="btn" id="next">${Q.k+1<Q.qs.length?"下一题":"看成绩"}</button></div>`;
